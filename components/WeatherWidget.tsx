@@ -113,8 +113,8 @@ export default function WeatherWidget() {
       navigator.geolocation.getCurrentPosition(
         (position) => handlePositionUpdate(position.coords.latitude, position.coords.longitude),
         (error) => {
-          console.warn("Geolocation denied or failed, falling back to Kampala", error);
-          fetchWeather(0.31628, 32.58219, 'Kampala, Uganda');
+          console.warn("Geolocation denied or failed", error);
+          setError("Location access required for live weather updates.");
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
@@ -126,7 +126,7 @@ export default function WeatherWidget() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
     } else {
-      fetchWeather(0.31628, 32.58219, 'Kampala, Uganda');
+      setError("Geolocation is not supported by your browser.");
     }
 
     // Refresh weather data every 5 minutes for the current location

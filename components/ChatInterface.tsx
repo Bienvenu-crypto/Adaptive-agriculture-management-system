@@ -16,13 +16,17 @@ interface Message {
   image?: string;
 }
 
-export default function ChatInterface() {
+interface LocationProps {
+  location?: { lat: number; lon: number; name: string } | null;
+}
+
+export default function ChatInterface({ location }: LocationProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'bot',
-      content: "Hello! I am your Adaptive Agriculture Management System advisor. I can help you in English, Luganda, Swahili, or Kinyarwanda. How can I help you with your crops today?",
+      content: "Hello! I am your Global Agriculture Management System advisor. I can help you with expert agricultural guidance tailored to your specific location and climate. How can I help you with your crops today?",
     },
   ]);
   const [input, setInput] = useState('');
@@ -128,7 +132,11 @@ export default function ChatInterface() {
         day: 'numeric',
       });
 
-      const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}. Always use this date when answering questions about time, seasons, or current events.`;
+      const locationContext = location 
+        ? `The user is currently located in or near: ${location.name} (Latitude: ${location.lat}, Longitude: ${location.lon}). Provide advice specific to this region's climate, soil, and typical agricultural practices.`
+        : "The user's specific location is unknown, but provide best-practice global agricultural advice.";
+
+      const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
 
       const response = await ai.models.generateContent({
         model,

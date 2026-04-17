@@ -16,6 +16,12 @@ import NotificationBell from '@/components/NotificationBell';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 
+interface LocationState {
+  lat: number;
+  lon: number;
+  name: string;
+}
+
 export default function Page() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,10 +29,33 @@ export default function Page() {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [activeView, setActiveView] = useState<string>(user ? 'iot' : 'chat');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [location, setLocation] = useState<LocationState | null>(null);
 
   useEffect(() => {
-    setActiveView(user ? 'iot' : 'chat');
-  }, [user]);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          let locationName = 'detected location';
+          
+          try {
+            const geoRes = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              locationName = geoData.address?.city || geoData.address?.country || 'current area';
+            }
+          } catch (e) {
+            console.error("Geocoding failed", e);
+          }
+          
+          setLocation({ lat: latitude, lon: longitude, name: locationName });
+        },
+        (error) => {
+          console.warn("Geolocation access denied. App will work with restricted context.", error);
+        }
+      );
+    }
+  }, []);
 
   const switchView = (viewId: string) => {
     setActiveView(viewId);
@@ -54,20 +83,20 @@ export default function Page() {
           className="flex flex-col mb-12 cursor-pointer"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <span className="text-[1.3rem] font-bold text-[#014D3E] leading-[1.2] tracking-tight">Adaptive Agriculture</span>
+          <span className="text-[1.3rem] font-bold text-[#014D3E] leading-[1.2] tracking-tight">Global Agriculture</span>
           <span className="text-[1.3rem] font-bold text-[#014D3E] leading-[1.2] tracking-tight">Management System</span>
         </div>
 
         <div className="flex-1 space-y-2 mt-4">
-          {!user ? (
-            <button
-              onClick={() => switchView('chat')}
-              className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'chat' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                }`}
-            >
-              Advisory
-            </button>
-          ) : (
+          <button
+            onClick={() => switchView('chat')}
+            className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'chat' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
+              }`}
+          >
+            Advisory
+          </button>
+
+          {user && (
             <>
               <button
                 onClick={() => switchView('iot')}
@@ -151,7 +180,6 @@ export default function Page() {
       {/* Desktop Top Header */}
       <div className="hidden lg:flex fixed top-0 right-0 left-72 h-24 items-center justify-between px-12 z-40 bg-[#F8F9FA]/50 backdrop-blur-md border-b border-black/5">
         <h1 className="flex flex-col leading-none">
-
           <span className="text-3xl font-black text-emerald-950 tracking-tighter">
             Smart Farming <span className="text-emerald-600">Intelligence</span>
           </span>
@@ -187,7 +215,7 @@ export default function Page() {
       <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/5 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col" onClick={() => switchView(user ? 'iot' : 'chat')}>
-            <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Adaptive Agriculture</span>
+            <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Global Agriculture</span>
             <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Management System</span>
           </div>
 
@@ -218,7 +246,7 @@ export default function Page() {
                       className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'chat' ? 'bg-emerald-600 text-white' : 'text-emerald-700 bg-emerald-50'
                         }`}
                     >
-                      Advisory Output
+                      Advisory
                     </button>
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <button onClick={() => openAuthModal('login')} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50 border border-slate-100">Sign In</button>
@@ -236,11 +264,12 @@ export default function Page() {
                         <p className="text-xs font-bold text-emerald-950 mt-1 lowercase">{user.email}</p>
                       </div>
                     </div>
+                    <button onClick={() => switchView('chat')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'chat' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Advisory</button>
                     <button onClick={() => switchView('iot')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'iot' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Metrics</button>
                     <button onClick={() => switchView('recommendation')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'recommendation' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Crops</button>
                     <button onClick={() => switchView('calendar')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'calendar' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Calendar</button>
                     <button onClick={() => switchView('market')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'market' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Market</button>
-                    <button onClick={() => switchView('marketplace')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'marketplace' ? 'bg-emerald-600 text-white' : 'text-emerald-700 bg-emerald-50'}`}>Exchange</button>
+                    <button onClick={() => switchView('marketplace')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'marketplace' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Exchange</button>
                     <button onClick={() => switchView('weather')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Weather</button>
                     <button onClick={() => switchView('resources')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'resources' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Library</button>
                     <Link href="/admin" className="px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest mt-2 block text-center">
@@ -274,7 +303,7 @@ export default function Page() {
                   </h2>
                   <p className="text-slate-500 text-lg">Real-time expert guidance for your agricultural journey.</p>
                 </div>
-                <ChatInterface />
+                <ChatInterface location={location} />
                 {!user && (
                   <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl mt-12">
                     <div className="relative z-10 max-w-2xl px-4">
@@ -298,45 +327,30 @@ export default function Page() {
               <div className="space-y-8">
                 <div>
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Smart Soil & Weather
+                    <div className="w-2 h-8 bg-emerald-500 rounded-full" />
+                    Field Intelligence
                   </h2>
-                  <p className="text-slate-500 text-lg">Real-time data from your connected farm sensors.</p>
+                  <p className="text-slate-500 text-lg">Live telemetry from your smart agricultural nodes.</p>
                 </div>
                 <IoTDashboard />
               </div>
             )}
 
-            {activeView === 'recommendation' && (
+            {activeView === 'weather' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Crop Intelligence
-                  </h2>
-                  <p className="text-slate-500 text-lg">AI-powered recommendations for optimal yield and disease detection.</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Climate Dynamics</h2>
+                  <p className="text-slate-500 text-lg">Hyper-local weather awareness for strategic planning.</p>
                 </div>
-                <CropRecommendation />
-              </div>
-            )}
-
-            {activeView === 'calendar' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Farming Schedule
-                  </h2>
-                  <p className="text-slate-500 text-lg">Personalized calendar for planting, weeding, and harvesting.</p>
-                </div>
-                <SmartCropCalendar />
+                <WeatherWidget />
               </div>
             )}
 
             {activeView === 'market' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Market Pulse
-                  </h2>
-                  <p className="text-slate-500 text-lg">Live regional price indices for your agricultural produce.</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Market Insight</h2>
+                  <p className="text-slate-500 text-lg">Real-time commodity valuation and trend analysis.</p>
                 </div>
                 <MarketPrices />
               </div>
@@ -345,34 +359,38 @@ export default function Page() {
             {activeView === 'marketplace' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Platform Marketplace
-                  </h2>
-                  <p className="text-slate-500 text-lg">Securely trade your produce and farm inputs with verified buyers.</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Farming Exchange</h2>
+                  <p className="text-slate-500 text-lg">Secure peer-to-peer commodity marketplace.</p>
                 </div>
                 <Marketplace />
               </div>
             )}
 
-            {activeView === 'weather' && (
+            {activeView === 'recommendation' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Micro-Climate Analysis
-                  </h2>
-                  <p className="text-slate-500 text-lg">Hyper-local weather forecasting tailored to your farm's location.</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Crop Strategy</h2>
+                  <p className="text-slate-500 text-lg">AI-powered variety selection based on your soil profile.</p>
                 </div>
-                <WeatherWidget />
+                <CropRecommendation location={location} />
+              </div>
+            )}
+
+            {activeView === 'calendar' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Seasonal Matrix</h2>
+                  <p className="text-slate-500 text-lg">Precision scheduling for your entire agricultural cycle.</p>
+                </div>
+                <SmartCropCalendar />
               </div>
             )}
 
             {activeView === 'resources' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    Knowledge Repository
-                  </h2>
-                  <p className="text-slate-500 text-lg">Access expert guides and research on sustainable farming practices.</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Knowledge Core</h2>
+                  <p className="text-slate-500 text-lg">Curated agricultural insights and best practices.</p>
                 </div>
                 <ResourceLibrary />
               </div>
@@ -380,21 +398,6 @@ export default function Page() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-black/5 mt-20 py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <span className="text-lg font-bold tracking-tight text-emerald-900">Adaptive Agriculture Management System</span>
-          </div>
-          <p className="text-slate-400 text-sm">© 2026 Adaptive Agriculture Management System. Built for Bugema University Software Engineering.</p>
-          <div className="flex gap-6 text-slate-400 text-sm">
-            <button className="cursor-pointer hover:text-emerald-600">Privacy</button>
-            <button className="cursor-pointer hover:text-emerald-600">Terms</button>
-            <button onClick={() => switchView('chat')} className="cursor-pointer hover:text-emerald-600">Contact</button>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

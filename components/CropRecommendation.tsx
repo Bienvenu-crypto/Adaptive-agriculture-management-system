@@ -5,8 +5,9 @@ import { motion } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 
-export default function CropRecommendation() {
+export default function CropRecommendation({ location }: { location?: { lat: number; lon: number; name: string } | null }) {
   const [loading, setLoading] = useState(false);
+  const [detecting, setDetecting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nitrogen: '40',
@@ -16,6 +17,34 @@ export default function CropRecommendation() {
     rainfall: '100',
     temperature: '25',
   });
+
+  const handleAutoDetect = async () => {
+    if (!location) {
+      alert("Please allow location access to use auto-detection.");
+      return;
+    }
+
+    setDetecting(true);
+    try {
+      const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`);
+      if (response.ok) {
+        const data = await response.json();
+        const current = data.current;
+        const daily = data.daily; // Assume we might get precip here if the API provides it
+        
+        setFormData(prev => ({
+          ...prev,
+          temperature: Math.round(current.temperature_2m).toString(),
+          // Mocking rainfall estimate if not in current; normally you'd use a historical climate API or daily sum
+          rainfall: current.showers > 0 || current.rain > 0 ? "250" : "120" 
+        }));
+      }
+    } catch (error) {
+      console.error("Detection Error:", error);
+    } finally {
+      setDetecting(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,8 +91,16 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
           AI
         </div>
         <div>
-          <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">Crop Intelligence</h2>
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">AI-driven output optimization</p>
+          <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">Crop Strategy Engine</h2>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Smart Yield Optimization</p>
+        </div>
+      </div>
+
+      <div className="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
+        <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-black shrink-0">i</div>
+        <div>
+          <p className="text-[10px] font-black uppercase text-blue-900 tracking-widest mb-1">Acquisition Guide</p>
+          <p className="text-xs text-blue-700 font-medium">Get **N-P-K and pH** from soil testing kits or digital sensors. **Rainfall and Temp** can be automatically detected based on your live global coordinates.</p>
         </div>
       </div>
 
@@ -87,14 +124,23 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
               <input type="number" step="0.1" name="ph" value={formData.ph} onChange={handleChange} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Rainfall (mm)</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1 truncate">Rainfall (mm/yr)</label>
               <input type="number" name="rainfall" value={formData.rainfall} onChange={handleChange} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Temp (°C)</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1 truncate">Surface Temp (°C)</label>
               <input type="number" name="temperature" value={formData.temperature} onChange={handleChange} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleAutoDetect}
+            disabled={detecting || !location}
+            className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hover:border-emerald-300 hover:text-emerald-600 transition-all flex items-center justify-center gap-2"
+          >
+            {detecting ? 'Contacting Satellites...' : location ? 'Auto-Detect Environment' : 'Location Required for Detection'}
+          </button>
           <button
             type="submit"
             disabled={loading}

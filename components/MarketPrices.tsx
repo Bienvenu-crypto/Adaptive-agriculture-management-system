@@ -147,7 +147,7 @@ export default function MarketPrices() {
             <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-500 text-[9px] font-black tracking-widest uppercase">Estimate</span>
           )}
         </div>
-        <span className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em]">UGX / KG</span>
+        <span className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em]">UNITS / KG</span>
       </div>
 
       <form onSubmit={handleSearch} className="mb-6 relative">
@@ -224,7 +224,7 @@ export default function MarketPrices() {
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
                   labelStyle={{ fontWeight: '900', color: '#1e293b', marginBottom: '4px', textTransform: 'uppercase', fontSize: '10px' }}
                   itemStyle={{ color: '#4f46e5', fontWeight: '900', fontSize: '12px' }}
-                  formatter={(value: any) => [`UGX ${Number(value).toLocaleString()}`, 'PRICE']}
+                  formatter={(value: any) => [`${Number(value).toLocaleString()}`, 'PRICE']}
                 />
                 <Line
                   type="monotone"
