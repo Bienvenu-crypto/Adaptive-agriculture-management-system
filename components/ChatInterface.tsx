@@ -138,13 +138,31 @@ export default function ChatInterface({ location }: LocationProps) {
 
       const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
 
-      const response = await ai.models.generateContent({
-        model,
-        contents: [{ parts: promptParts }],
-        config: {
-          systemInstruction: dynamicSystemInstruction,
-        },
-      });
+      // IMPLEMENT RETRY LOGIC FOR HIGH DEMAND (503 ERRORS)
+      const executeWithRetry = async (retries = 3, delay = 1000) => {
+        for (let i = 0; i < retries; i++) {
+          try {
+            return await ai.models.generateContent({
+              model,
+              contents: [{ parts: promptParts }],
+              config: {
+                systemInstruction: dynamicSystemInstruction,
+              },
+            });
+          } catch (err: any) {
+            const is503 = err.message?.includes('503') || err.status === 503 || err.code === 503;
+            if (is503 && i < retries - 1) {
+              await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+              continue;
+            }
+            throw err;
+          }
+        }
+      };
+
+      const response = await executeWithRetry();
+
+      if (!response) throw new Error("AI service is currently unavailable.");
 
       const botMessage: Message = {
         id: crypto.randomUUID(),

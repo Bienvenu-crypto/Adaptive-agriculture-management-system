@@ -27,17 +27,32 @@ export default function CropRecommendation({ location }: { location?: { lat: num
     setDetecting(true);
     try {
       const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`);
+      
+      // Simulate high-precision satellite regional soil analysis
+      // In a production app, this would query a global soil database (e.g. SoilGrids)
+      const mockSoilByRegion = () => {
+        const isArid = location.lat > 15 && location.lat < 35; // Rough check for arid zones
+        const isTropical = Math.abs(location.lat) < 15;
+        
+        if (isArid) return { n: "20", p: "25", k: "15", ph: "7.8" };
+        if (isTropical) return { n: "60", p: "45", k: "50", ph: "5.8" };
+        return { n: "45", p: "35", k: "40", ph: "6.5" }; // Temperate default
+      };
+
+      const soil = mockSoilByRegion();
+
       if (response.ok) {
         const data = await response.json();
         const current = data.current;
-        const daily = data.daily; // Assume we might get precip here if the API provides it
         
-        setFormData(prev => ({
-          ...prev,
+        setFormData({
+          nitrogen: soil.n,
+          phosphorus: soil.p,
+          potassium: soil.k,
+          ph: soil.ph,
           temperature: Math.round(current.temperature_2m).toString(),
-          // Mocking rainfall estimate if not in current; normally you'd use a historical climate API or daily sum
           rainfall: current.showers > 0 || current.rain > 0 ? "250" : "120" 
-        }));
+        });
       }
     } catch (error) {
       console.error("Detection Error:", error);
@@ -69,11 +84,29 @@ export default function CropRecommendation({ location }: { location?: { lat: num
 - Average Temperature: ${formData.temperature} °C
 
 Based on these parameters, recommend the top 3 most suitable crops to plant. For each crop, briefly explain WHY it is suitable and give one quick tip for maximizing yield. Format the response clearly using Markdown.`;
+      
+      // IMPLEMENT RETRY LOGIC FOR HIGH DEMAND (503 ERRORS)
+      const executeWithRetry = async (retries = 3, delay = 1000) => {
+        for (let i = 0; i < retries; i++) {
+          try {
+            return await ai.models.generateContent({
+              model: "gemini-3-flash-preview",
+              contents: [{ parts: [{ text: prompt }] }],
+            });
+          } catch (err: any) {
+            const is503 = err.message?.includes('503') || err.status === 503 || err.code === 503;
+            if (is503 && i < retries - 1) {
+              await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+              continue;
+            }
+            throw err;
+          }
+        }
+      };
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{ parts: [{ text: prompt }] }],
-      });
+      const response = await executeWithRetry();
+
+      if (!response) throw new Error("AI service did not respond. Please try again.");
 
       setResult(response.text || "Could not generate recommendations. Please try again.");
     } catch (error) {
