@@ -36,6 +36,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS chats (
     id TEXT PRIMARY KEY,
     user_email TEXT,
+    session_id TEXT,
     role TEXT,
     content TEXT,
     image_url TEXT,

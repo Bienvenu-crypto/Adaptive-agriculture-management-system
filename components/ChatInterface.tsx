@@ -22,6 +22,7 @@ interface LocationProps {
 
 export default function ChatInterface({ location }: LocationProps) {
   const { user } = useAuth();
+  const [sessionId] = useState(() => crypto.randomUUID());
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -31,28 +32,66 @@ export default function ChatInterface({ location }: LocationProps) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historySessions, setHistorySessions] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      if (user?.email) {
-        try {
-          const res = await fetch(`/api/chats?email=${encodeURIComponent(user.email)}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.chats && data.chats.length > 0) {
-              setMessages(data.chats);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to fetch chat history:", error);
+  const fetchHistory = async () => {
+    if (user?.email) {
+      try {
+        const res = await fetch(`/api/chats?email=${encodeURIComponent(user.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistorySessions(data.sessions || []);
         }
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
       }
-    };
-    fetchHistory();
-  }, [user]);
+    }
+  };
+
+  const saveConversation = async () => {
+    if (!user?.email || messages.length <= 1) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: messages.slice(1), // Don't save the welcome message
+          user_email: user.email,
+          session_id: sessionId
+        }),
+      });
+      if (res.ok) {
+        alert("Conversation saved to history!");
+      }
+    } catch (error) {
+      console.error("Save Error:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadSession = async (sid: string) => {
+    if (!user?.email) return;
+    try {
+      const res = await fetch(`/api/chats?email=${encodeURIComponent(user.email)}&session_id=${sid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMessages([
+          { id: '1', role: 'bot', content: "Viewing archived conversation:" },
+          ...data.chats
+        ]);
+        setShowHistory(false);
+      }
+    } catch (error) {
+      console.error("Load Error:", error);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -60,7 +99,7 @@ export default function ChatInterface({ location }: LocationProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, showHistory]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,8 +115,6 @@ export default function ChatInterface({ location }: LocationProps) {
   const handleSend = async () => {
     if ((!input.trim() && !selectedImage) || isLoading) return;
 
-    const userEmail = user ? user.email : 'anonymous@aams.local';
-
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -91,20 +128,6 @@ export default function ChatInterface({ location }: LocationProps) {
     setIsLoading(true);
 
     sendGAEvent({ event: 'chat_interaction', value: 'send_message' });
-
-    // Save user message to DB
-    try {
-      await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...userMessage,
-          user_email: userEmail
-        }),
-      });
-    } catch (e) {
-      console.error("Failed to save user message:", e);
-    }
 
     try {
       const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -138,7 +161,6 @@ export default function ChatInterface({ location }: LocationProps) {
 
       const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
 
-      // IMPLEMENT RETRY LOGIC FOR HIGH DEMAND (503 ERRORS)
       const executeWithRetry = async (retries = 3, delay = 1000) => {
         for (let i = 0; i < retries; i++) {
           try {
@@ -152,7 +174,7 @@ export default function ChatInterface({ location }: LocationProps) {
           } catch (err: any) {
             const is503 = err.message?.includes('503') || err.status === 503 || err.code === 503;
             if (is503 && i < retries - 1) {
-              await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+              await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); 
               continue;
             }
             throw err;
@@ -171,20 +193,6 @@ export default function ChatInterface({ location }: LocationProps) {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-
-      // Save bot message to DB
-      try {
-        await fetch('/api/chats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...botMessage,
-            user_email: userEmail
-          }),
-        });
-      } catch (e) {
-        console.error("Failed to save bot message:", e);
-      }
     } catch (error) {
       console.error("Chat Error:", error);
       setMessages((prev) => [
@@ -209,51 +217,132 @@ export default function ChatInterface({ location }: LocationProps) {
             <p className="text-xs text-emerald-700">Online • Expert AI Support</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          {user && (
+            <>
+              <button 
+                onClick={() => {
+                  setShowHistory(!showHistory);
+                  if (!showHistory) fetchHistory();
+                }}
+                className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors"
+              >
+                {showHistory ? 'Close History' : 'History'}
+              </button>
+              <button 
+                onClick={saveConversation}
+                disabled={isSaving || messages.length <= 1}
+                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? 'Saving...' : 'Save Chat'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30">
-        <AnimatePresence initial={false}>
-          {messages.map((m) => (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] p-3 rounded-2xl ${m.role === 'user'
-                  ? 'bg-emerald-600 text-white rounded-tr-none'
-                  : 'bg-white border border-black/5 text-gray-800 rounded-tl-none shadow-sm'
-                  }`}
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-hidden relative">
+        {/* Messages */}
+        <div className={`h-full overflow-y-auto p-4 space-y-4 bg-gray-50/30 ${showHistory ? 'opacity-20 pointer-events-none' : ''}`}>
+          <AnimatePresence initial={false}>
+            {messages.map((m) => (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {m.image && (
-                  <div className="relative w-full h-48 mb-2">
-                    <Image
-                      src={m.image}
-                      alt="Uploaded"
-                      fill
-                      className="object-cover rounded-lg"
-                      referrerPolicy="no-referrer"
-                    />
+                <div
+                  className={`max-w-[80%] p-3 rounded-2xl ${m.role === 'user'
+                    ? 'bg-emerald-600 text-white rounded-tr-none'
+                    : 'bg-white border border-black/5 text-gray-800 rounded-tl-none shadow-sm'
+                    }`}
+                >
+                  {m.image && (
+                    <div className="relative w-full h-48 mb-2">
+                      <Image
+                        src={m.image}
+                        alt="Uploaded"
+                        fill
+                        className="object-cover rounded-lg"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  )}
+                  <div className="prose prose-sm max-w-none prose-emerald">
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
                   </div>
-                )}
-                <div className="prose prose-sm max-w-none prose-emerald">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
                 </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* History Overlay */}
+        <AnimatePresence mode="wait">
+          {showHistory && (
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              className="absolute inset-0 bg-white z-20 flex flex-col"
+            >
+              <div className="p-4 border-b border-black/5 bg-gray-50 flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-widest text-emerald-900">Chat History</h3>
+                <button 
+                  onClick={() => {
+                    setMessages([{
+                      id: '1',
+                      role: 'bot',
+                      content: "Hello! I am your Global Agriculture Management System advisor. I can help you with expert agricultural guidance tailored to your specific location and climate. How can I help you with your crops today?",
+                    }]);
+                    setShowHistory(false);
+                    window.location.reload(); 
+                  }}
+                  className="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:underline"
+                >
+                  New Chat
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {historySessions.length === 0 ? (
+                  <div className="text-center py-20 text-gray-400">
+                    <p className="text-sm font-bold">No saved conversations found.</p>
+                  </div>
+                ) : (
+                  historySessions.map((session: any) => (
+                    <button
+                      key={session.session_id}
+                      onClick={() => loadSession(session.session_id)}
+                      className="w-full text-left p-4 rounded-xl border border-black/5 bg-gray-50/50 hover:bg-emerald-50 transition-colors group"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
+                          {new Date(session.started_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 font-medium line-clamp-2">
+                        {session.first_message}
+                      </p>
+                    </button>
+                  ))
+                )}
               </div>
             </motion.div>
-          ))}
+          )}
         </AnimatePresence>
+
+        {/* Loading Overlay */}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-black/5 p-3 rounded-2xl rounded-tl-none flex items-center gap-2">
+          <div className="absolute bottom-24 left-4 z-10">
+            <div className="bg-white border border-black/5 p-3 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
               <span className="text-xs text-emerald-600 animate-pulse font-black">---</span>
               <span className="text-xs text-gray-400">Thinking...</span>
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}

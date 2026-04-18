@@ -188,9 +188,64 @@ Make the advice highly actionable for a smallholder farmer.`;
                   <h3 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Harvest Window</h3>
                   <p className="font-black text-indigo-700 tracking-tighter text-xl">{data.estimatedYieldDate}</p>
                 </div>
-                <div className="bg-white px-4 py-3 rounded-lg border border-indigo-100 text-xs text-indigo-800 max-w-md font-medium">
-                  <span className="font-black block mb-1 uppercase text-[9px] tracking-widest opacity-50 text-indigo-950">System Guidance</span>
-                  {data.generalAdvice}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="bg-white px-4 py-3 rounded-lg border border-indigo-100 text-xs text-indigo-800 max-w-md font-medium">
+                    <span className="font-black block mb-1 uppercase text-[9px] tracking-widest opacity-50 text-indigo-950">System Guidance</span>
+                    {data.generalAdvice}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const { jsPDF } = await import('jspdf');
+                      const autoTable = (await import('jspdf-autotable')).default;
+                      
+                      const doc = new jsPDF();
+                      
+                      // Title
+                      doc.setFontSize(22);
+                      doc.setTextColor(30, 41, 59); // slate-800
+                      doc.text("Smart Crop Calendar", 14, 22);
+                      
+                      // Info Section
+                      doc.setFontSize(10);
+                      doc.setTextColor(100, 116, 139); // slate-500
+                      doc.text(`Crop: ${formData.crop}`, 14, 32);
+                      doc.text(`Region: ${formData.region}`, 14, 38);
+                      doc.text(`Planting Date: ${formData.plantingDate}`, 14, 44);
+                      doc.text(`Estimated Harvest: ${data.estimatedYieldDate}`, 14, 50);
+                      
+                      // Advice
+                      doc.setFontSize(11);
+                      doc.setTextColor(71, 85, 105); // slate-600
+                      const splitAdvice = doc.splitTextToSize(`System Guidance: ${data.generalAdvice}`, 180);
+                      doc.text(splitAdvice, 14, 60);
+                      
+                      // Table
+                      const tableRows = data.tasks.map(t => [
+                        t.date,
+                        t.phase,
+                        t.task,
+                        t.description,
+                        t.isCritical ? 'Yes' : 'No'
+                      ]);
+                      
+                      autoTable(doc, {
+                        startY: 75,
+                        head: [['Date', 'Phase', 'Task', 'Description', 'Critical']],
+                        body: tableRows,
+                        theme: 'grid',
+                        headStyles: { fillColor: [79, 70, 229] }, // indigo-600
+                        styles: { fontSize: 9, cellPadding: 3 },
+                        columnStyles: {
+                          3: { cellWidth: 70 }, // Description column
+                        }
+                      });
+                      
+                      doc.save(`crop_calendar_${formData.crop.toLowerCase()}.pdf`);
+                    }}
+                    className="px-4 py-2 bg-white border border-indigo-200 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-sm"
+                  >
+                    Download PDF
+                  </button>
                 </div>
               </div>
 
