@@ -10,12 +10,12 @@ export default function CropRecommendation({ location }: { location?: { lat: num
   const [detecting, setDetecting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    nitrogen: '40',
-    phosphorus: '30',
-    potassium: '30',
-    ph: '6.5',
-    rainfall: '100',
-    temperature: '25',
+    nitrogen: '',
+    phosphorus: '',
+    potassium: '',
+    ph: '',
+    rainfall: '',
+    temperature: '',
   });
 
   const handleAutoDetect = async () => {
@@ -190,6 +190,61 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
               animate={{ opacity: 1 }}
               className="prose prose-sm prose-emerald max-w-none"
             >
+              <div className="flex justify-between items-center mb-4 not-prose">
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Recommended Strategy</span>
+                <button
+                  onClick={async () => {
+                    const { jsPDF } = await import('jspdf');
+                    const doc = new jsPDF();
+                    
+                    doc.setFontSize(22);
+                    doc.setTextColor(5, 150, 105); // emerald-600
+                    doc.text("Crop Strategy Report", 14, 22);
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 116, 139); // slate-500
+                    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+                    
+                    // Parameters
+                    doc.setDrawColor(209, 213, 219);
+                    doc.line(14, 35, 196, 35);
+                    
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text("Soil & Environmental Parameters", 14, 45);
+                    
+                    doc.setFontSize(10);
+                    let y = 55;
+                    const params = [
+                      `Nitrogen (N): ${formData.nitrogen} mg/kg`,
+                      `Phosphorus (P): ${formData.phosphorus} mg/kg`,
+                      `Potassium (K): ${formData.potassium} mg/kg`,
+                      `Soil pH: ${formData.ph}`,
+                      `Rainfall: ${formData.rainfall} mm/yr`,
+                      `Temperature: ${formData.temperature} °C`
+                    ];
+                    
+                    params.forEach(p => {
+                      doc.text(p, 20, y);
+                      y += 7;
+                    });
+                    
+                    // Recommendations
+                    doc.setFontSize(14);
+                    doc.text("AI-Powered Recommendation", 14, y + 10);
+                    
+                    doc.setFontSize(11);
+                    doc.setTextColor(51, 65, 85);
+                    const splitResult = doc.splitTextToSize(result.replace(/#/g, '').replace(/\*/g, ''), 180);
+                    doc.text(splitResult, 14, y + 20);
+                    
+                    doc.save("crop_strategy_report.pdf");
+                  }}
+                  className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-50 transition-colors shadow-sm"
+                >
+                  Download Strategy (PDF)
+                </button>
+              </div>
               <ReactMarkdown>{result}</ReactMarkdown>
             </motion.div>
           ) : (

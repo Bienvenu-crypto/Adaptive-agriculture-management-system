@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -23,9 +24,9 @@ export default function SmartCropCalendar() {
   const [data, setData] = useState<CalendarData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    crop: 'Maize',
-    plantingDate: new Date().toISOString().split('T')[0],
-    region: 'Central Uganda',
+    crop: '',
+    plantingDate: '',
+    region: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -125,14 +126,31 @@ Make the advice highly actionable for a smallholder farmer.`;
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Planting Date</label>
-              <input
-                type="date"
-                name="plantingDate"
-                value={formData.plantingDate}
-                onChange={handleChange}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="plantingDate"
+                  value={formData.plantingDate}
+                  onChange={handleChange}
+                  placeholder="Select Date"
+                  onFocus={(e) => {
+                    e.target.type = 'date';
+                    try { e.target.showPicker(); } catch (err) {}
+                  }}
+                  onClick={(e) => {
+                    e.currentTarget.type = 'date';
+                    try { e.currentTarget.showPicker(); } catch (err) {}
+                  }}
+                  onBlur={(e) => {
+                    if (!e.target.value) e.target.type = 'text';
+                  }}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none appearance-none cursor-pointer"
+                  required
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <Calendar size={16} />
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Region</label>
