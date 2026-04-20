@@ -37,7 +37,7 @@ export default function Page() {
         async (position) => {
           const { latitude, longitude } = position.coords;
           let locationName = 'detected location';
-          
+
           try {
             const geoRes = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
             if (geoRes.ok) {
@@ -47,7 +47,7 @@ export default function Page() {
           } catch (e) {
             console.error("Geocoding failed", e);
           }
-          
+
           setLocation({ lat: latitude, lon: longitude, name: locationName });
         },
         (error) => {
@@ -195,9 +195,9 @@ export default function Page() {
                 <p className="text-[10px] font-bold text-slate-950 mt-1 lowercase">{user.email}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
-              <button 
+              <button
                 onClick={() => logout()}
                 className="px-6 py-2.5 bg-pink-500 shadow-xl shadow-pink-500/20 text-white rounded-full text-[10px] font-black uppercase tracking-[0.3em] hover:bg-pink-600 transition-all flex items-center gap-2"
               >

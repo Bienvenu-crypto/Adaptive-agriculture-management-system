@@ -27,7 +27,7 @@ export default function ChatInterface({ location }: LocationProps) {
     {
       id: '1',
       role: 'bot',
-      content: "Hello! I am your Global Agriculture Management System advisor. I can help you with expert agricultural guidance tailored to your specific location and climate. How can I help you with your crops today?",
+      content: "Hello! I am your Adaptive Agriculture Management System advisor. I can help you with expert agricultural guidance tailored to your specific location and climate. How can I help you with your crops today?",
     },
   ]);
   const [input, setInput] = useState('');
@@ -155,7 +155,7 @@ export default function ChatInterface({ location }: LocationProps) {
         day: 'numeric',
       });
 
-      const locationContext = location 
+      const locationContext = location
         ? `The user is currently located in or near: ${location.name} (Latitude: ${location.lat}, Longitude: ${location.lon}). Provide advice specific to this region's climate, soil, and typical agricultural practices.`
         : "The user's specific location is unknown, but provide best-practice global agricultural advice.";
 
@@ -174,7 +174,7 @@ export default function ChatInterface({ location }: LocationProps) {
           } catch (err: any) {
             const is503 = err.message?.includes('503') || err.status === 503 || err.code === 503;
             if (is503 && i < retries - 1) {
-              await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); 
+              await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
               continue;
             }
             throw err;
@@ -220,7 +220,7 @@ export default function ChatInterface({ location }: LocationProps) {
         <div className="flex items-center gap-2">
           {user && (
             <>
-              <button 
+              <button
                 onClick={() => {
                   setShowHistory(!showHistory);
                   if (!showHistory) fetchHistory();
@@ -229,7 +229,7 @@ export default function ChatInterface({ location }: LocationProps) {
               >
                 {showHistory ? 'Close History' : 'History'}
               </button>
-              <button 
+              <button
                 onClick={saveConversation}
                 disabled={isSaving || messages.length <= 1}
                 className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-colors disabled:opacity-50"
@@ -291,7 +291,7 @@ export default function ChatInterface({ location }: LocationProps) {
             >
               <div className="p-4 border-b border-black/5 bg-gray-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-widest text-emerald-900">Chat History</h3>
-                <button 
+                <button
                   onClick={() => {
                     setMessages([{
                       id: '1',
@@ -299,7 +299,7 @@ export default function ChatInterface({ location }: LocationProps) {
                       content: "Hello! I am your Global Agriculture Management System advisor. I can help you with expert agricultural guidance tailored to your specific location and climate. How can I help you with your crops today?",
                     }]);
                     setShowHistory(false);
-                    window.location.reload(); 
+                    window.location.reload();
                   }}
                   className="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:underline"
                 >
