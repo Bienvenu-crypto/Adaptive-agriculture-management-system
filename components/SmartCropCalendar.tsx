@@ -1,9 +1,9 @@
 'use client';
-
-import React, { useState } from 'react';
-import { Calendar } from 'lucide-react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calendar, Trash2, Clock, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
+import { useAuth } from '@/components/AuthProvider';
 
 interface Task {
   date: string;
@@ -20,14 +20,75 @@ interface CalendarData {
 }
 
 export default function SmartCropCalendar() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<CalendarData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [aiCache] = useState<Map<string, CalendarData>>(new Map());
+  
   const [formData, setFormData] = useState({
     crop: '',
     plantingDate: '',
     region: '',
   });
+
+  const fetchHistory = useCallback(async () => {
+    if (!user?.email) return;
+    try {
+      const res = await fetch(`/api/calendars?email=${encodeURIComponent(user.email)}`);
+      if (res.ok) {
+        const d = await res.json();
+        setHistory(d.calendars || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+    }
+  }, [user?.email]);
+
+  useEffect(() => {
+    if (showHistory) fetchHistory();
+  }, [showHistory, fetchHistory]);
+
+  const saveCalendar = async (calData: CalendarData) => {
+    if (!user?.email) return;
+    setIsSaving(true);
+    try {
+      await fetch('/api/calendars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_email: user.email,
+          crop: formData.crop,
+          planting_date: formData.plantingDate,
+          region: formData.region,
+          data_json: calData
+        })
+      });
+      fetchHistory();
+    } catch (err) {
+      console.error("Failed to save calendar:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteFromHistory = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!user?.email) return;
+    try {
+      const res = await fetch(`/api/calendars?id=${id}&email=${encodeURIComponent(user.email)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setHistory(prev => prev.filter(item => item.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete:", err);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,6 +99,27 @@ export default function SmartCropCalendar() {
     setLoading(true);
     setError(null);
     setData(null);
+
+    // 1. Check Personal History first
+    const existing = history.find(h => 
+      h.crop.toLowerCase() === formData.crop.toLowerCase() && 
+      h.region.toLowerCase() === formData.region.toLowerCase() &&
+      h.planting_date === formData.plantingDate
+    );
+
+    if (existing) {
+      setData(existing.data_json);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Check Session Cache (different planting date but same crop/region template)
+    const cacheKey = `${formData.crop.toLowerCase()}-${formData.region.toLowerCase()}`;
+    if (aiCache.has(cacheKey)) {
+      setData(aiCache.get(cacheKey)!);
+      setLoading(false);
+      return;
+    }
 
     try {
       const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -57,7 +139,7 @@ Include specific estimated dates (calculated from the planting date) for key pha
 Make the advice highly actionable for a smallholder farmer.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ parts: [{ text: prompt }] }],
         config: {
           responseMimeType: "application/json",
@@ -88,25 +170,47 @@ Make the advice highly actionable for a smallholder farmer.`;
 
       const jsonStr = response.text || "{}";
       const parsedData = JSON.parse(jsonStr) as CalendarData;
+      
+      // Save to Session Cache
+      const cacheKey = `${formData.crop.toLowerCase()}-${formData.region.toLowerCase()}`;
+      aiCache.set(cacheKey, parsedData);
+
       setData(parsedData);
-    } catch (err) {
+      
+      // Auto-save if user is logged in
+      if (user?.email) {
+        saveCalendar(parsedData);
+      }
+    } catch (err: any) {
       console.error("Calendar Error:", err);
-      setError("An error occurred while generating the calendar. Please try again.");
+      setError(`Error: ${err.message || "Failed to generate calendar"}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase tracking-tighter">
-          CAL
+    <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm relative overflow-hidden">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase tracking-tighter">
+            CAL
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Smart Crop Calendar</h2>
+            <p className="text-sm text-slate-500 font-bold">AI crop management schedule</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Smart Crop Calendar</h2>
-          <p className="text-sm text-slate-500 font-bold">AI crop management schedule</p>
-        </div>
+        {user && (
+          <button 
+            onClick={() => setShowHistory(!showHistory)}
+            className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 hover:text-indigo-600 flex items-center gap-2"
+            title="Calendar History"
+          >
+            <Clock size={20} />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Archives</span>
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -174,7 +278,58 @@ Make the advice highly actionable for a smallholder farmer.`;
           </form>
         </div>
 
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 relative">
+          <AnimatePresence>
+            {showHistory && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute inset-0 z-10 bg-white rounded-2xl flex flex-col pt-0"
+              >
+                <div className="flex items-center justify-between mb-4 bg-slate-50 p-4 rounded-xl">
+                  <h3 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Calendar Archive</h3>
+                  <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                  {history.length === 0 ? (
+                    <div className="text-center py-20 text-slate-400">
+                      <p className="text-sm font-bold text-slate-500">No saved calendars found.</p>
+                    </div>
+                  ) : (
+                    history.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setFormData({ crop: item.crop, plantingDate: item.planting_date, region: item.region });
+                          setData(item.data_json);
+                          setShowHistory(false);
+                        }}
+                        className="w-full text-left p-4 rounded-xl border border-black/5 bg-slate-50 hover:bg-indigo-50 transition-colors group flex items-center justify-between cursor-pointer"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                             <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{item.crop}</span>
+                             <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">• {new Date(item.timestamp).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs text-slate-600 font-medium">{item.region} · Planted on {item.planting_date}</p>
+                        </div>
+                        <button 
+                          onClick={(e) => deleteFromHistory(e, item.id)}
+                          className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 relative z-10"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {error && (
             <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs mb-4 border border-red-100 flex items-start gap-2 font-bold uppercase tracking-wide">
               <p>{error}</p>
@@ -211,59 +366,46 @@ Make the advice highly actionable for a smallholder farmer.`;
                     <span className="font-black block mb-1 uppercase text-[9px] tracking-widest opacity-50 text-indigo-950">System Guidance</span>
                     {data.generalAdvice}
                   </div>
-                  <button
-                    onClick={async () => {
-                      const { jsPDF } = await import('jspdf');
-                      const autoTable = (await import('jspdf-autotable')).default;
-                      
-                      const doc = new jsPDF();
-                      
-                      // Title
-                      doc.setFontSize(22);
-                      doc.setTextColor(30, 41, 59); // slate-800
-                      doc.text("Smart Crop Calendar", 14, 22);
-                      
-                      // Info Section
-                      doc.setFontSize(10);
-                      doc.setTextColor(100, 116, 139); // slate-500
-                      doc.text(`Crop: ${formData.crop}`, 14, 32);
-                      doc.text(`Region: ${formData.region}`, 14, 38);
-                      doc.text(`Planting Date: ${formData.plantingDate}`, 14, 44);
-                      doc.text(`Estimated Harvest: ${data.estimatedYieldDate}`, 14, 50);
-                      
-                      // Advice
-                      doc.setFontSize(11);
-                      doc.setTextColor(71, 85, 105); // slate-600
-                      const splitAdvice = doc.splitTextToSize(`System Guidance: ${data.generalAdvice}`, 180);
-                      doc.text(splitAdvice, 14, 60);
-                      
-                      // Table
-                      const tableRows = data.tasks.map(t => [
-                        t.date,
-                        t.phase,
-                        t.task,
-                        t.description,
-                        t.isCritical ? 'Yes' : 'No'
-                      ]);
-                      
-                      autoTable(doc, {
-                        startY: 75,
-                        head: [['Date', 'Phase', 'Task', 'Description', 'Critical']],
-                        body: tableRows,
-                        theme: 'grid',
-                        headStyles: { fillColor: [79, 70, 229] }, // indigo-600
-                        styles: { fontSize: 9, cellPadding: 3 },
-                        columnStyles: {
-                          3: { cellWidth: 70 }, // Description column
-                        }
-                      });
-                      
-                      doc.save(`crop_calendar_${formData.crop.toLowerCase()}.pdf`);
-                    }}
-                    className="px-4 py-2 bg-white border border-indigo-200 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-sm"
-                  >
-                    Download PDF
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        const { jsPDF } = await import('jspdf');
+                        const autoTable = (await import('jspdf-autotable')).default;
+                        
+                        const doc = new jsPDF();
+                        doc.setFontSize(22);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text("Smart Crop Calendar", 14, 22);
+                        doc.setFontSize(10);
+                        doc.setTextColor(100, 116, 139);
+                        doc.text(`Crop: ${formData.crop}`, 14, 32);
+                        doc.text(`Region: ${formData.region}`, 14, 38);
+                        doc.text(`Planting Date: ${formData.plantingDate}`, 14, 44);
+                        doc.text(`Estimated Harvest: ${data.estimatedYieldDate}`, 14, 50);
+                        doc.setFontSize(11);
+                        doc.setTextColor(71, 85, 105);
+                        const splitAdvice = doc.splitTextToSize(`System Guidance: ${data.generalAdvice}`, 180);
+                        doc.text(splitAdvice, 14, 60);
+                        const tableRows = data.tasks.map(t => [t.date, t.phase, t.task, t.description, t.isCritical ? 'Yes' : 'No']);
+                        autoTable(doc, {
+                          startY: 75,
+                          head: [['Date', 'Phase', 'Task', 'Description', 'Critical']],
+                          body: tableRows,
+                          theme: 'grid',
+                          headStyles: { fillColor: [79, 70, 229] },
+                          styles: { fontSize: 9, cellPadding: 3 },
+                          columnStyles: { 3: { cellWidth: 70 } }
+                        });
+                        doc.save(`crop_calendar_${formData.crop.toLowerCase()}.pdf`);
+                      }}
+                      className="px-4 py-2 bg-white border border-indigo-200 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-sm"
+                    >
+                      PDF
+                    </button>
+                    {isSaving && (
+                        <div className="px-4 py-2 text-[10px] text-indigo-400 font-black uppercase tracking-widest animate-pulse">Saving...</div>
+                    )}
+                  </div>
                 </div>
               </div>
 

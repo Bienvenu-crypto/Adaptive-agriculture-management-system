@@ -153,6 +153,17 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
   CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
+  CREATE TABLE IF NOT EXISTS crop_calendars (
+    id TEXT PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    crop TEXT NOT NULL,
+    planting_date TEXT NOT NULL,
+    region TEXT NOT NULL,
+    data_json TEXT NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_crop_calendars_user ON crop_calendars(user_email);
 `);
 
 try {

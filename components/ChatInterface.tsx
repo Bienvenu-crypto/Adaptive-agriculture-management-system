@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'motion/react';
@@ -135,8 +135,22 @@ export default function ChatInterface({ location }: LocationProps) {
 
       // Use correct SDK and Model
       // Use correct SDK and Model
-      const genAI = new GoogleGenerativeAI(apiKey);
-      
+      const ai = new GoogleGenAI({ apiKey });
+      const model = "gemini-3-flash-preview";
+
+      let promptParts: any[] = [{ text: input || "Analyze this crop image and provide agricultural advice." }];
+
+      if (userMessage.image) {
+        const mimeType = userMessage.image.match(/data:(.*?);/)?.[1] || "image/jpeg";
+        const base64Data = userMessage.image.split(',')[1];
+        promptParts.push({
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType,
+          },
+        });
+      }
+
       const currentDate = new Date().toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -150,51 +164,18 @@ export default function ChatInterface({ location }: LocationProps) {
 
       const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
 
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.5-flash",
-        systemInstruction: dynamicSystemInstruction
+      const response = await ai.models.generateContent({
+        model,
+        contents: [{ parts: promptParts }],
+        config: {
+          systemInstruction: dynamicSystemInstruction,
+        },
       });
-
-      let promptParts: any[] = [{ text: input || "Analyze this image and provide crop diagnostic advice." }];
-      
-      if (userMessage.image) {
-        promptParts.push({
-          inlineData: {
-            data: userMessage.image.split(',')[1],
-            mimeType: "image/jpeg"
-          }
-        });
-      }
-
-      const executeWithRetry = async (retries = 3, delay = 1000) => {
-        for (let i = 0; i < retries; i++) {
-          try {
-            const result = await model.generateContent({
-              contents: [{ role: 'user', parts: promptParts }],
-              generationConfig: {
-                maxOutputTokens: 2048,
-              }
-            });
-            return result.response;
-          } catch (err: any) {
-            console.warn(`Retry attempt ${i + 1} failed:`, err);
-            if ((err.status === 503 || err.status === 429 || err.message?.includes('503')) && i < retries - 1) {
-              await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-              continue;
-            }
-            throw err;
-          }
-        }
-      };
-
-      const response = await executeWithRetry();
-      if (!response) throw new Error("No response from AI");
-      const botText = response.text();
 
       const botMessage: Message = {
         id: crypto.randomUUID(),
         role: 'bot',
-        content: botText || "I'm sorry, I couldn't process that request. Please try again.",
+        content: response.text || "I'm sorry, I couldn't process that request. Please try again.",
       };
 
       setMessages((prev) => [...prev, botMessage]);
@@ -213,7 +194,7 @@ export default function ChatInterface({ location }: LocationProps) {
   return (
     <div className="flex flex-col h-[600px] bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-bottom border-black/5 bg-emerald-50 flex items-center justify-between">
+      <div className="p-4 border-b border-black/5 bg-emerald-50 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[10px] font-black tracking-widest">
             AI

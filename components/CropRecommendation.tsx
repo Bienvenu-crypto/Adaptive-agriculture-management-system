@@ -5,61 +5,17 @@ import { motion } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 
-export default function CropRecommendation({ location }: { location?: { lat: number; lon: number; name: string } | null }) {
+export default function CropRecommendation() {
   const [loading, setLoading] = useState(false);
-  const [detecting, setDetecting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    nitrogen: '',
-    phosphorus: '',
-    potassium: '',
-    ph: '',
-    rainfall: '',
-    temperature: '',
+    nitrogen: '40',
+    phosphorus: '30',
+    potassium: '30',
+    ph: '6.5',
+    rainfall: '100',
+    temperature: '25',
   });
-
-  const handleAutoDetect = async () => {
-    if (!location) {
-      alert("Please allow location access to use auto-detection.");
-      return;
-    }
-
-    setDetecting(true);
-    try {
-      const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`);
-      
-      // Simulate high-precision satellite regional soil analysis
-      // In a production app, this would query a global soil database (e.g. SoilGrids)
-      const mockSoilByRegion = () => {
-        const isArid = location.lat > 15 && location.lat < 35; // Rough check for arid zones
-        const isTropical = Math.abs(location.lat) < 15;
-        
-        if (isArid) return { n: "20", p: "25", k: "15", ph: "7.8" };
-        if (isTropical) return { n: "60", p: "45", k: "50", ph: "5.8" };
-        return { n: "45", p: "35", k: "40", ph: "6.5" }; // Temperate default
-      };
-
-      const soil = mockSoilByRegion();
-
-      if (response.ok) {
-        const data = await response.json();
-        const current = data.current;
-        
-        setFormData({
-          nitrogen: soil.n,
-          phosphorus: soil.p,
-          potassium: soil.k,
-          ph: soil.ph,
-          temperature: Math.round(current.temperature_2m).toString(),
-          rainfall: current.showers > 0 || current.rain > 0 ? "250" : "120" 
-        });
-      }
-    } catch (error) {
-      console.error("Detection Error:", error);
-    } finally {
-      setDetecting(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -84,29 +40,11 @@ export default function CropRecommendation({ location }: { location?: { lat: num
 - Average Temperature: ${formData.temperature} °C
 
 Based on these parameters, recommend the top 3 most suitable crops to plant. For each crop, briefly explain WHY it is suitable and give one quick tip for maximizing yield. Format the response clearly using Markdown.`;
-      
-      // IMPLEMENT RETRY LOGIC FOR HIGH DEMAND (503 ERRORS)
-      const executeWithRetry = async (retries = 3, delay = 1000) => {
-        for (let i = 0; i < retries; i++) {
-          try {
-            return await ai.models.generateContent({
-              model: "gemini-2.5-flash",
-              contents: [{ parts: [{ text: prompt }] }],
-            });
-          } catch (err: any) {
-            const is503 = err.message?.includes('503') || err.status === 503 || err.code === 503;
-            if (is503 && i < retries - 1) {
-              await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
-              continue;
-            }
-            throw err;
-          }
-        }
-      };
 
-      const response = await executeWithRetry();
-
-      if (!response) throw new Error("AI service did not respond. Please try again.");
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ parts: [{ text: prompt }] }],
+      });
 
       setResult(response.text || "Could not generate recommendations. Please try again.");
     } catch (error) {
@@ -124,16 +62,8 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
           AI
         </div>
         <div>
-          <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">Crop Strategy Engine</h2>
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Smart Yield Optimization</p>
-        </div>
-      </div>
-
-      <div className="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
-        <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-black shrink-0">i</div>
-        <div>
-          <p className="text-[10px] font-black uppercase text-blue-900 tracking-widest mb-1">Acquisition Guide</p>
-          <p className="text-xs text-blue-700 font-medium">Get **N-P-K and pH** from soil testing kits or digital sensors. **Rainfall and Temp** can be automatically detected based on your live global coordinates.</p>
+          <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">Crop Intelligence</h2>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">AI-driven output optimization</p>
         </div>
       </div>
 
@@ -157,100 +87,45 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
               <input type="number" step="0.1" name="ph" value={formData.ph} onChange={handleChange} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1 truncate">Rainfall (mm/yr)</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Rainfall (mm)</label>
               <input type="number" name="rainfall" value={formData.rainfall} onChange={handleChange} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1 truncate">Surface Temp (°C)</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Temp (°C)</label>
               <input type="number" name="temperature" value={formData.temperature} onChange={handleChange} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleAutoDetect}
-            disabled={detecting || !location}
-            className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hover:border-emerald-300 hover:text-emerald-600 transition-all flex items-center justify-center gap-2"
-          >
-            {detecting ? 'Contacting Satellites...' : location ? 'Auto-Detect Environment' : 'Location Required for Detection'}
-          </button>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 text-white rounded-2xl py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all disabled:opacity-70 shadow-xl shadow-emerald-500/10 active:scale-[0.98]"
+            className="w-full bg-slate-900 text-white rounded-2xl py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-600 transition-all disabled:opacity-50"
           >
-            {loading ? 'Analyzing...' : 'Execute Analysis'}
+            {loading ? 'Processing Data...' : 'Recommend Crops'}
           </button>
         </form>
 
-        <div className="bg-slate-50 rounded-3xl border border-black/5 p-6 h-full min-h-[300px] overflow-y-auto">
-          {result ? (
+        <div className="relative min-h-[400px]">
+          {loading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+              <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Running analysis...</p>
+            </div>
+          ) : result ? (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="prose prose-sm prose-emerald max-w-none"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="h-full"
             >
-              <div className="flex justify-between items-center mb-4 not-prose">
-                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Recommended Strategy</span>
-                <button
-                  onClick={async () => {
-                    const { jsPDF } = await import('jspdf');
-                    const doc = new jsPDF();
-                    
-                    doc.setFontSize(22);
-                    doc.setTextColor(5, 150, 105); // emerald-600
-                    doc.text("Crop Strategy Report", 14, 22);
-                    
-                    doc.setFontSize(10);
-                    doc.setTextColor(100, 116, 139); // slate-500
-                    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-                    
-                    // Parameters
-                    doc.setDrawColor(209, 213, 219);
-                    doc.line(14, 35, 196, 35);
-                    
-                    doc.setFontSize(12);
-                    doc.setTextColor(30, 41, 59);
-                    doc.text("Soil & Environmental Parameters", 14, 45);
-                    
-                    doc.setFontSize(10);
-                    let y = 55;
-                    const params = [
-                      `Nitrogen (N): ${formData.nitrogen} mg/kg`,
-                      `Phosphorus (P): ${formData.phosphorus} mg/kg`,
-                      `Potassium (K): ${formData.potassium} mg/kg`,
-                      `Soil pH: ${formData.ph}`,
-                      `Rainfall: ${formData.rainfall} mm/yr`,
-                      `Temperature: ${formData.temperature} °C`
-                    ];
-                    
-                    params.forEach(p => {
-                      doc.text(p, 20, y);
-                      y += 7;
-                    });
-                    
-                    // Recommendations
-                    doc.setFontSize(14);
-                    doc.text("AI-Powered Recommendation", 14, y + 10);
-                    
-                    doc.setFontSize(11);
-                    doc.setTextColor(51, 65, 85);
-                    const splitResult = doc.splitTextToSize(result.replace(/#/g, '').replace(/\*/g, ''), 180);
-                    doc.text(splitResult, 14, y + 20);
-                    
-                    doc.save("crop_strategy_report.pdf");
-                  }}
-                  className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-50 transition-colors shadow-sm"
-                >
-                  Download Strategy (PDF)
-                </button>
+              <div className="h-full bg-emerald-50/50 rounded-[2rem] border border-emerald-100 p-8 overflow-y-auto">
+                <div className="prose prose-sm max-w-none prose-emerald">
+                  <ReactMarkdown>{result}</ReactMarkdown>
+                </div>
               </div>
-              <ReactMarkdown>{result}</ReactMarkdown>
             </motion.div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center px-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-4 px-6 py-2 border border-dashed border-slate-300 rounded-2xl">Ready for Input</span>
-              <p className="text-xs font-bold uppercase tracking-widest leading-loose">Enter your soil and environmental parameters to get AI-powered crop recommendations.</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200 text-center p-8">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Awaiting Input Parameters</p>
+              <p className="text-sm font-bold text-slate-400 max-w-[240px]">Enter soil and climate data to generate localized crop recommendations.</p>
             </div>
           )}
         </div>
@@ -258,4 +133,3 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
     </div>
   );
 }
-

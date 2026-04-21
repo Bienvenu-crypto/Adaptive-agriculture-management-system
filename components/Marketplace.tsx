@@ -556,6 +556,7 @@ export default function Marketplace() {
   const [showAddBuyOrder, setShowAddBuyOrder] = useState(false);
   const [prefillCrop, setPrefillCrop] = useState('');
   const [prefillCurrency, setPrefillCurrency] = useState('UGX');
+  const [tradeSearch, setTradeSearch] = useState('');
   const [tradeToast, setTradeToast] = useState<Trade | null>(null);
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -612,7 +613,7 @@ export default function Marketplace() {
         body: JSON.stringify({ id: tradeId, status: 'completed' }),
       });
       if (res.ok) {
-        setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: 'completed' } : t));
+        setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: 'completed', completed_at: new Date().toISOString() } : t));
       }
     } catch (err) {
       console.error('Failed to complete trade');
@@ -688,14 +689,14 @@ export default function Marketplace() {
 
       <div className="bg-white rounded-2xl border border-black/5 shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 p-6 text-white">
+        <div className={`p-6 text-white ${mpUser?.role === 'buyer' ? 'bg-blue-600' : 'bg-emerald-600'}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="text-xl font-black uppercase tracking-tighter">AgroMarket</h3>
                 <span className="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">Verified</span>
               </div>
-              <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest">
+              <p className={`${mpUser?.role === 'buyer' ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
                 Agricultural Output Exchange
               </p>
             </div>
@@ -704,7 +705,7 @@ export default function Marketplace() {
               <div className="flex items-center gap-4 flex-shrink-0">
                 <div className="text-right">
                   <p className="font-black text-sm uppercase tracking-tighter">{mpUser.name}</p>
-                  <p className="text-emerald-200 text-[9px] uppercase tracking-widest font-black">{mpUser.role} · {mpUser.district}</p>
+                  <p className={`${mpUser.role === 'buyer' ? 'text-blue-200' : 'text-emerald-200'} text-[9px] uppercase tracking-widest font-black`}>{mpUser.role} · {mpUser.district}</p>
                 </div>
                 <button onClick={handleLogout} className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl transition-colors text-[9px] font-black uppercase tracking-widest">
                   Logout
@@ -825,18 +826,25 @@ export default function Marketplace() {
                             <p className="font-bold text-slate-900 text-sm">{listing.quantity_kg.toLocaleString()} kg</p>
                             <p className="text-xs text-emerald-700 font-bold">{listing.currency} {listing.price_per_kg.toLocaleString()}/kg</p>
                           </div>
-                          {mpUser?.role === 'buyer' && (
-                            <button
-                              onClick={() => { 
-                                setPrefillCrop(listing.crop); 
-                                setPrefillCurrency(listing.currency);
-                                setShowAddBuyOrder(true); 
-                              }}
-                              className="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                              Buy
-                            </button>
-                          )}
+                          <button
+                            onClick={() => { 
+                              if (!mpUser) {
+                                setAuthRole('buyer');
+                                setShowAuthModal(true);
+                                return;
+                              }
+                              if (mpUser.role !== 'buyer') {
+                                alert("Your account is registered as a Seller. Please log in with a Buyer account to purchase crops.");
+                                return;
+                              }
+                              setPrefillCrop(listing.crop); 
+                              setPrefillCurrency(listing.currency);
+                              setShowAddBuyOrder(true); 
+                            }}
+                            className="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors"
+                          >
+                            Buy
+                          </button>
                         </div>
                       </motion.div>
                     ))}
@@ -983,89 +991,127 @@ export default function Marketplace() {
           {/* TRADES TAB */}
           {activeTab === 'trades' && mpUser && (
             <div>
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Escrowed Trades ({trades.length})</h4>
-              {trades.length === 0 ? (
-                <div className="text-center py-16 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                  <p className="text-[10px] font-black uppercase tracking-widest">No Trade Activity</p>
-                  <p className="text-sm font-bold mt-2 text-slate-500 max-w-xs mx-auto">
-                    {mpUser.role === 'buyer'
-                      ? 'Post a buy order to automatically match with a seller.'
-                      : 'Trades will appear here once a match is found.'}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto bg-white rounded-3xl border border-slate-100 shadow-sm">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100">
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crop</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Value</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Parties</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Completed On</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {trades.map(trade => {
-                        const isSeller = trade.seller_id === mpUser.id;
-                        return (
-                          <motion.tr 
-                            key={trade.id}
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            className="hover:bg-slate-50/50 transition-colors"
-                          >
-                            <td className="px-6 py-4">
-                              <span className="font-black text-slate-900 uppercase tracking-tight">{trade.crop}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-xs font-bold text-slate-600">{trade.quantity_kg} KG</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-xs font-black text-slate-900">{trade.currency} {trade.total_value.toLocaleString()}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black text-slate-900 uppercase">S: {trade.seller_name}</span>
-                                <span className="text-[10px] font-black text-slate-900 uppercase">B: {trade.buyer_name}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-widest ${
-                                trade.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
-                              }`}>
-                                {trade.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">
-                                {trade.completed_at ? format(new Date(trade.completed_at), 'dd MMM yyyy') : '--'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              {trade.status === 'pending' && isSeller && (
-                                <button
-                                  onClick={() => confirmReceipt(trade.id)}
-                                  className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"
-                                >
-                                  Finalize
-                                </button>
-                              )}
-                              {trade.status === 'pending' && !isSeller && (
-                                <span className="text-[9px] font-black text-slate-300 uppercase italic">Awaiting Seller</span>
-                              )}
-                              {trade.status === 'completed' && (
-                                <span className="text-emerald-500 font-black text-[9px] uppercase">Verified</span>
-                              )}
-                            </td>
-                          </motion.tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search trades by crop, user name, or phone number..."
+                  value={tradeSearch}
+                  onChange={(e) => setTradeSearch(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                />
+              </div>
+              {(() => {
+                const search = tradeSearch.toLowerCase();
+                const filtered = trades.filter(t => 
+                  t.crop.toLowerCase().includes(search) || 
+                  t.seller_name.toLowerCase().includes(search) || 
+                  t.buyer_name.toLowerCase().includes(search) ||
+                  (t.seller_phone && t.seller_phone.includes(search)) ||
+                  (t.buyer_phone && t.buyer_phone.includes(search))
+                );
+
+                if (trades.length === 0) {
+                  return (
+                    <div className="text-center py-16 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <p className="text-[10px] font-black uppercase tracking-widest">No Trade Activity</p>
+                      <p className="text-sm font-bold mt-2 text-slate-500 max-w-xs mx-auto">
+                        {mpUser.role === 'buyer'
+                          ? 'Post a buy order to automatically match with a seller.'
+                          : 'Trades will appear here once a match is found.'}
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-16 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                       <p className="text-[10px] font-black uppercase tracking-widest">No Results Found</p>
+                       <p className="text-sm font-bold mt-1">Try a different search term</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto bg-white rounded-3xl border border-slate-100 shadow-sm">
+                    <table className="w-full text-left">
+                      <thead className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white">
+                        <tr className="border-b border-white/10">
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-emerald-50 text-left">Crop</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-emerald-50 text-left">Quantity</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white text-left text-center">Total Value</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-50 text-left">Parties</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-50 text-left text-center">Status</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-50 text-left">Completed On</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-50 text-left">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {filtered.map(trade => {
+                          const isSeller = trade.seller_id === mpUser.id;
+                          return (
+                            <motion.tr 
+                              key={trade.id}
+                              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                              className="hover:bg-slate-50/50 transition-colors"
+                            >
+                              <td className="px-6 py-4">
+                                <span className="font-black text-slate-900 uppercase tracking-tight">{trade.crop}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-xs font-bold text-slate-600">{trade.quantity_kg} KG</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-xs font-black text-slate-900">{trade.currency} {trade.total_value.toLocaleString()}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-emerald-100 text-emerald-700 text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Seller</span>
+                                    <span className="text-[10px] font-black text-slate-900 uppercase truncate max-w-[100px]">{trade.seller_name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-blue-100 text-blue-700 text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Buyer</span>
+                                    <span className="text-[10px] font-black text-slate-900 uppercase truncate max-w-[100px]">{trade.buyer_name}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-widest ${
+                                  trade.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                                }`}>
+                                  {trade.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                  {trade.completed_at ? format(new Date(trade.completed_at), 'dd MMM yyyy') : '--'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {trade.status === 'pending' && isSeller && (
+                                  <button
+                                    onClick={() => confirmReceipt(trade.id)}
+                                    className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"
+                                  >
+                                    Finalize
+                                  </button>
+                                )}
+                                {trade.status === 'pending' && !isSeller && (
+                                  <span className="text-[9px] font-black text-slate-300 uppercase italic">Awaiting Seller</span>
+                                )}
+                                {trade.status === 'completed' && (
+                                  <span className="text-emerald-500 font-black text-[9px] uppercase">Verified</span>
+                                )}
+                              </td>
+                            </motion.tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
