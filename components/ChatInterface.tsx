@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'motion/react';
@@ -133,21 +133,10 @@ export default function ChatInterface({ location }: LocationProps) {
       const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
       if (!apiKey) throw new Error("API Key missing");
 
-      const ai = new GoogleGenAI({ apiKey });
-      const model = "gemini-3-flash-preview";
-
-      let promptParts: any[] = [{ text: input || "Analyze this crop image and provide agricultural advice." }];
-
-      if (userMessage.image) {
-        const base64Data = userMessage.image.split(',')[1];
-        promptParts.push({
-          inlineData: {
-            data: base64Data,
-            mimeType: "image/jpeg",
-          },
-        });
-      }
-
+      // Use correct SDK and Model
+      // Use correct SDK and Model
+      const genAI = new GoogleGenerativeAI(apiKey);
+      
       const currentDate = new Date().toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -161,19 +150,35 @@ export default function ChatInterface({ location }: LocationProps) {
 
       const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
 
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash",
+        systemInstruction: dynamicSystemInstruction
+      });
+
+      let promptParts: any[] = [{ text: input || "Analyze this image and provide crop diagnostic advice." }];
+      
+      if (userMessage.image) {
+        promptParts.push({
+          inlineData: {
+            data: userMessage.image.split(',')[1],
+            mimeType: "image/jpeg"
+          }
+        });
+      }
+
       const executeWithRetry = async (retries = 3, delay = 1000) => {
         for (let i = 0; i < retries; i++) {
           try {
-            return await ai.models.generateContent({
-              model,
-              contents: [{ parts: promptParts }],
-              config: {
-                systemInstruction: dynamicSystemInstruction,
-              },
+            const result = await model.generateContent({
+              contents: [{ role: 'user', parts: promptParts }],
+              generationConfig: {
+                maxOutputTokens: 2048,
+              }
             });
+            return result.response;
           } catch (err: any) {
-            const is503 = err.message?.includes('503') || err.status === 503 || err.code === 503;
-            if (is503 && i < retries - 1) {
+            console.warn(`Retry attempt ${i + 1} failed:`, err);
+            if ((err.status === 503 || err.status === 429 || err.message?.includes('503')) && i < retries - 1) {
               await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
               continue;
             }
@@ -183,21 +188,22 @@ export default function ChatInterface({ location }: LocationProps) {
       };
 
       const response = await executeWithRetry();
-
-      if (!response) throw new Error("AI service is currently unavailable.");
+      if (!response) throw new Error("No response from AI");
+      const botText = response.text();
 
       const botMessage: Message = {
         id: crypto.randomUUID(),
         role: 'bot',
-        content: response.text || "I'm sorry, I couldn't process that request. Please try again.",
+        content: botText || "I'm sorry, I couldn't process that request. Please try again.",
       };
 
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Chat Error:", error);
+    } catch (error: any) {
+      console.error("Chat Error Detail:", error);
+      const errorMessage = error.message || "Unknown error";
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'bot', content: "Sorry, I encountered an error. Please check your connection and try again." },
+        { id: crypto.randomUUID(), role: 'bot', content: `Sorry, I encountered an error: ${errorMessage}. Please check your connection and try again.` },
       ]);
     } finally {
       setIsLoading(false);

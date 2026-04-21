@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
@@ -6,8 +6,8 @@ export const getGeminiModel = () => {
   if (!apiKey) {
     throw new Error("NEXT_PUBLIC_GEMINI_API_KEY is not set");
   }
-  const ai = new GoogleGenAI({ apiKey });
-  return ai.models.generateContent.bind(ai.models);
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 };
 
 export const AGROBOT_SYSTEM_INSTRUCTION = `

@@ -27,8 +27,8 @@ export default function NotificationBell() {
         setNotifications(data.notifications);
         setUnreadCount(data.unreadCount || 0);
       }
-    } catch (err) {
-      console.error('Failed to fetch notifications');
+    } catch (err: any) {
+      console.error('Failed to fetch notifications:', err.message);
     }
   }, []);
 

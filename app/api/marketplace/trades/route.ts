@@ -53,7 +53,11 @@ export async function PATCH(req: Request) {
        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    db.prepare('UPDATE trades SET status = ? WHERE id = ?').run(status, id);
+    if (status === 'completed') {
+      db.prepare('UPDATE trades SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?').run(status, id);
+    } else {
+      db.prepare('UPDATE trades SET status = ? WHERE id = ?').run(status, id);
+    }
 
     // If completed, maybe notify the other party?
     const otherId = user.id === trade.seller_id ? trade.buyer_id : trade.seller_id;

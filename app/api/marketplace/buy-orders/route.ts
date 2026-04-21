@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please sign in as a buyer.' }, { status: 401 });
     }
 
-    const { crop, quantity_kg, max_price_per_kg, description } = await req.json();
+    const { crop, quantity_kg, max_price_per_kg, currency, description } = await req.json();
     if (!crop || !quantity_kg || !max_price_per_kg) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -70,18 +70,19 @@ export async function POST(req: Request) {
 
     const orderId = crypto.randomUUID();
     db.prepare(
-      'INSERT INTO buy_orders (id, buyer_id, crop, quantity_kg, max_price_per_kg, description) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(orderId, buyer.id, crop.trim(), quantity_kg, max_price_per_kg, description || null);
+      'INSERT INTO buy_orders (id, buyer_id, crop, quantity_kg, max_price_per_kg, currency, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(orderId, buyer.id, crop.trim(), quantity_kg, max_price_per_kg, currency || 'UGX', description || null);
 
     // === AUTO-MATCHING ENGINE (PARTIAL FULFILLMENT) ===
     const availableListings = db.prepare(`
       SELECT * FROM listings
       WHERE LOWER(crop) = LOWER(?)
         AND price_per_kg <= ?
+        AND currency = ?
         AND status = 'active'
         AND seller_id != ?
       ORDER BY price_per_kg ASC, created_at ASC
-    `).all(crop.trim(), max_price_per_kg, buyer.id) as any[];
+    `).all(crop.trim(), max_price_per_kg, currency || 'UGX', buyer.id) as any[];
 
     let remainingOrderQty = quantity_kg;
     const matchedTrades = [];
@@ -95,8 +96,8 @@ export async function POST(req: Request) {
       const totalValue = agreedPrice * matchQty;
 
       db.prepare(
-        'INSERT INTO trades (id, listing_id, buy_order_id, seller_id, buyer_id, crop, quantity_kg, agreed_price_per_kg, total_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).run(tradeId, listing.id, orderId, listing.seller_id, buyer.id, crop.trim(), matchQty, agreedPrice, totalValue);
+        'INSERT INTO trades (id, listing_id, buy_order_id, seller_id, buyer_id, crop, quantity_kg, agreed_price_per_kg, total_value, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(tradeId, listing.id, orderId, listing.seller_id, buyer.id, crop.trim(), matchQty, agreedPrice, totalValue, currency || 'UGX');
 
       // Update Listing: Subtract quantity and close if 0
       const newListingQty = listing.quantity_kg - matchQty;

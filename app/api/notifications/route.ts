@@ -5,46 +5,71 @@ import crypto from 'crypto';
 
 // Helper to get authenticated user ID
 async function getUserId() {
-  const cookieStore = await cookies();
-  
-  const mpSessionId = cookieStore.get('mp_session')?.value;
-  if (mpSessionId) {
-    const session = db
-      .prepare('SELECT user_id FROM marketplace_sessions WHERE id = ?')
-      .get(mpSessionId) as any;
-    if (session) return session.user_id;
-  }
+  try {
+    const cookieStore = await cookies();
+    
+    // Check Marketplace Session
+    const mpSessionId = cookieStore.get('mp_session')?.value;
+    if (mpSessionId) {
+      console.log("Checking MP Session:", mpSessionId);
+      const session = db
+        .prepare('SELECT user_id FROM marketplace_sessions WHERE id = ?')
+        .get(mpSessionId) as any;
+      if (session) return session.user_id;
+    }
 
-  const sessionId = cookieStore.get('agrobot_session')?.value;
-  if (sessionId) {
-    const session = db
-      .prepare('SELECT user_id FROM sessions WHERE id = ?')
-      .get(sessionId) as any;
-    if (session) return session.user_id;
+    // Check Agrobot Session
+    const sessionId = cookieStore.get('agrobot_session')?.value;
+    if (sessionId) {
+      console.log("Checking Agrobot Session:", sessionId);
+      const session = db
+        .prepare('SELECT user_id FROM sessions WHERE id = ?')
+        .get(sessionId) as any;
+      if (session) return session.user_id;
+    }
+  } catch (e) {
+    console.warn("Could not retrieve cookies for notifications:", (e as any).message);
   }
-
   return null;
 }
 
 export async function GET(req: Request) {
   try {
     const userId = await getUserId();
+    console.log("Fetching notifications, userId:", userId);
     
-    // Fetch notifications where user_id matches OR it's a global system notification (NULL)
-    const notifications = db.prepare(`
-      SELECT * FROM notifications 
-      WHERE (user_id IS ? OR user_id IS NULL) 
-      ORDER BY timestamp DESC LIMIT 20
-    `).all(userId);
+    // Fetch notifications where user_id matches OR it's global (NULL)
+    let notifications;
+    if (userId) {
+      notifications = db.prepare(`
+        SELECT * FROM notifications 
+        WHERE user_id = ? OR user_id IS NULL 
+        ORDER BY timestamp DESC LIMIT 20
+      `).all(userId);
+    } else {
+      notifications = db.prepare(`
+        SELECT * FROM notifications 
+        WHERE user_id IS NULL 
+        ORDER BY timestamp DESC LIMIT 20
+      `).all();
+    }
 
-    const unreadCount = db.prepare(`
-      SELECT COUNT(*) as count FROM notifications 
-      WHERE (user_id IS ? OR user_id IS NULL) AND is_read = 0
-    `).get(userId) as { count: number };
+    let unreadCount = 0;
+    if (userId) {
+      const res = db.prepare('SELECT COUNT(*) as count FROM notifications WHERE (user_id = ? OR user_id IS NULL) AND is_read = 0').get(userId) as any;
+      unreadCount = res?.count || 0;
+    } else {
+      const res = db.prepare('SELECT COUNT(*) as count FROM notifications WHERE user_id IS NULL AND is_read = 0').get() as any;
+      unreadCount = res?.count || 0;
+    }
 
-    return NextResponse.json({ notifications, unreadCount: unreadCount.count });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
+    return NextResponse.json({ notifications, unreadCount });
+  } catch (error: any) {
+    console.error('Fetch notifications error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to fetch notifications',
+      details: error.message 
+    }, { status: 500 });
   }
 }
 

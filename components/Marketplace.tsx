@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { format } from 'date-fns';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface MpUser {
@@ -19,6 +20,7 @@ interface Listing {
   crop: string;
   quantity_kg: number;
   price_per_kg: number;
+  currency: string;
   description: string | null;
   status: string;
   created_at: string;
@@ -33,6 +35,7 @@ interface BuyOrder {
   crop: string;
   quantity_kg: number;
   max_price_per_kg: number;
+  currency: string;
   description: string | null;
   status: string;
   created_at: string;
@@ -47,7 +50,11 @@ interface Trade {
   quantity_kg: number;
   agreed_price_per_kg: number;
   total_value: number;
+  currency: string;
   status: string;
+  payment_status: 'unpaid' | 'pending' | 'paid';
+  payment_method: string | null;
+  payment_phone: string | null;
   created_at: string;
   seller_name: string;
   seller_phone: string | null;
@@ -57,6 +64,7 @@ interface Trade {
   buyer_district: string;
   seller_id: string;
   buyer_id: string;
+  completed_at?: string;
 }
 
 // ─── Auth Modal ──────────────────────────────────────────────────────────────
@@ -95,7 +103,7 @@ function AuthModal({
       const body =
         mode === 'signup'
           ? { ...form, role }
-          : { email: form.email, password: form.password, role };
+          : { email: form.email, password: form.password, phone: form.phone, role };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -114,8 +122,6 @@ function AuthModal({
       setLoading(false);
     }
   };
-
-  const roleColor = role === 'seller' ? 'emerald' : 'blue';
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -189,29 +195,17 @@ function AuthModal({
                     placeholder="John Doe"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District</label>
-                    <input
-                      type="text"
-                      required
-                      value={form.district}
-                      onChange={(e) => setForm({ ...form, district: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
-                      placeholder="e.g. Wakiso"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1">Manual district entry</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Phone</label>
-                    <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
-                      placeholder="+256 700..."
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.district}
+                    onChange={(e) => setForm({ ...form, district: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
+                    placeholder="e.g. Wakiso"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Manual district entry</p>
                 </div>
               </>
             )}
@@ -225,6 +219,18 @@ function AuthModal({
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
                 placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Phone Number</label>
+              <input
+                type="tel"
+                required={mode === 'signup'}
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
+                placeholder="+256 700..."
               />
             </div>
 
@@ -283,7 +289,15 @@ function AuthModal({
 function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ crop: '', quantity_kg: '', price_per_kg: '', description: '' });
+  const [form, setForm] = useState({ 
+    crop: '', 
+    quantity_kg: '', 
+    price_per_kg: '', 
+    currency: 'UGX',
+    description: '' 
+  });
+
+  const currencies = ['UGX', 'KES', 'RWF', 'TZS', 'NGN', 'GHS', 'ZAR', 'USD'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,6 +311,7 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           crop: form.crop,
           quantity_kg: parseFloat(form.quantity_kg),
           price_per_kg: parseFloat(form.price_per_kg),
+          currency: form.currency,
           description: form.description,
         }),
       });
@@ -328,36 +343,48 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Crop Name</label>
-            <input type="text" required value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-              placeholder="e.g. Maize, Coffee, Matooke" />
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Crop Name</label>
+              <input type="text" required value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
+                placeholder="e.g. Maize" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Currency</label>
+              <select 
+                value={form.currency} 
+                onChange={e => setForm({ ...form, currency: e.target.value })}
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold appearance-none"
+              >
+                {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Quantity (kg)</label>
               <input type="number" required min="0.1" step="0.1" value={form.quantity_kg} onChange={e => setForm({ ...form, quantity_kg: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
                 placeholder="500" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Price/kg (UGX)</label>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Price/kg</label>
               <input type="number" required min="1" value={form.price_per_kg} onChange={e => setForm({ ...form, price_per_kg: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
                 placeholder="1200" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Description (optional)</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none"
+              className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none font-medium"
               rows={2} placeholder="Grade A, freshly harvested..." />
           </div>
           {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">{error}</div>}
           <button type="submit" disabled={loading}
-            className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-700 transition-colors disabled:opacity-70">
-            {loading ? 'Posting...' : 'Post Listing'}
+            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-700 transition-colors disabled:opacity-70 shadow-lg shadow-emerald-600/20">
+            {loading ? 'Processing...' : `Post Listing (${form.currency})`}
           </button>
         </form>
       </motion.div>
@@ -370,14 +397,24 @@ function AddBuyOrderModal({
   onClose,
   onSuccess,
   prefillCrop,
+  prefillCurrency = 'UGX',
 }: {
   onClose: () => void;
   onSuccess: (trade: Trade | null) => void;
   prefillCrop?: string;
+  prefillCurrency?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ crop: prefillCrop || '', quantity_kg: '', max_price_per_kg: '', description: '' });
+  const [form, setForm] = useState({ 
+    crop: prefillCrop || '', 
+    quantity_kg: '', 
+    max_price_per_kg: '', 
+    currency: prefillCurrency,
+    description: '' 
+  });
+
+  const currencies = ['UGX', 'KES', 'RWF', 'TZS', 'NGN', 'GHS', 'ZAR', 'USD'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -391,6 +428,7 @@ function AddBuyOrderModal({
           crop: form.crop,
           quantity_kg: parseFloat(form.quantity_kg),
           max_price_per_kg: parseFloat(form.max_price_per_kg),
+          currency: form.currency,
           description: form.description,
         }),
       });
@@ -422,36 +460,48 @@ function AddBuyOrderModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Crop Name</label>
-            <input type="text" required value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-              placeholder="e.g. Maize, Coffee, Matooke" />
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Crop Name</label>
+              <input type="text" required value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
+                placeholder="e.g. Maize" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Currency</label>
+              <select 
+                value={form.currency} 
+                onChange={e => setForm({ ...form, currency: e.target.value })}
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold appearance-none"
+              >
+                {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Quantity (kg)</label>
               <input type="number" required min="0.1" step="0.1" value={form.quantity_kg} onChange={e => setForm({ ...form, quantity_kg: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
                 placeholder="200" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Max Price/kg (UGX)</label>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Max Price/kg</label>
               <input type="number" required min="1" value={form.max_price_per_kg} onChange={e => setForm({ ...form, max_price_per_kg: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
                 placeholder="1500" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Notes (optional)</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none"
+              className="w-full bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none font-medium"
               rows={2} placeholder="Preferred grade, delivery notes..." />
           </div>
           {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">{error}</div>}
           <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-colors disabled:opacity-70">
-            {loading ? 'Submitting...' : 'Submit Order'}
+            className="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-colors disabled:opacity-70 shadow-lg shadow-blue-600/20">
+            {loading ? 'Submitting...' : `Submit Order (${form.currency})`}
           </button>
         </form>
       </motion.div>
@@ -461,10 +511,6 @@ function AddBuyOrderModal({
 
 // ─── Trade Success Toast ─────────────────────────────────────────────────────
 function TradeToast({ trade, onDismiss }: { trade: Trade; onDismiss: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDismiss, 8000);
-    return () => clearTimeout(t);
-  }, [onDismiss]);
 
   return (
     <motion.div
@@ -480,10 +526,10 @@ function TradeToast({ trade, onDismiss }: { trade: Trade; onDismiss: () => void 
         <div className="flex-1 min-w-0">
           <p className="font-black text-slate-900 text-xs uppercase tracking-tighter">🎉 Trade Matched!</p>
           <p className="text-[10px] text-slate-600 mt-1 uppercase tracking-widest leading-loose">
-            <strong>{trade.quantity_kg} KG</strong> of <strong>{trade.crop}</strong> at <strong>UGX {trade.agreed_price_per_kg.toLocaleString()}/KG</strong>
+            <strong>{trade.quantity_kg} KG</strong> of <strong>{trade.crop}</strong> at <strong>{trade.currency} {trade.agreed_price_per_kg.toLocaleString()}/KG</strong>
           </p>
           <p className="text-[10px] text-emerald-700 font-black mt-1 uppercase tracking-[0.2em]">
-            TOTAL VALUE: UGX {trade.total_value.toLocaleString()}
+            TOTAL VALUE: {trade.currency} {trade.total_value.toLocaleString()}
           </p>
           <div className="mt-3 pt-3 border-t border-slate-50">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none px-1">Contact Intelligence</p>
@@ -509,6 +555,7 @@ export default function Marketplace() {
   const [showAddListing, setShowAddListing] = useState(false);
   const [showAddBuyOrder, setShowAddBuyOrder] = useState(false);
   const [prefillCrop, setPrefillCrop] = useState('');
+  const [prefillCurrency, setPrefillCurrency] = useState('UGX');
   const [tradeToast, setTradeToast] = useState<Trade | null>(null);
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -557,7 +604,7 @@ export default function Marketplace() {
     setTrades([]);
   };
 
-  const markTradeCompleted = async (tradeId: string) => {
+  const confirmReceipt = async (tradeId: string) => {
     try {
       const res = await fetch('/api/marketplace/trades', {
         method: 'PATCH',
@@ -605,9 +652,10 @@ export default function Marketplace() {
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showAuthModal && (
           <AuthModal
+            key="auth-modal"
             onClose={() => setShowAuthModal(false)}
             onSuccess={(user) => { setMpUser(user); fetchAll(); }}
             defaultRole={authRole}
@@ -615,14 +663,17 @@ export default function Marketplace() {
         )}
         {showAddListing && (
           <AddListingModal
+            key="add-listing-modal"
             onClose={() => setShowAddListing(false)}
             onSuccess={() => { fetchListings(); setActiveTab('my-listings'); }}
           />
         )}
         {showAddBuyOrder && (
           <AddBuyOrderModal
+            key="add-buy-order-modal"
             onClose={() => setShowAddBuyOrder(false)}
             prefillCrop={prefillCrop}
+            prefillCurrency={prefillCurrency}
             onSuccess={(trade) => {
               fetchAll();
               if (trade) setTradeToast(trade);
@@ -631,7 +682,7 @@ export default function Marketplace() {
           />
         )}
         {tradeToast && (
-          <TradeToast trade={tradeToast} onDismiss={() => setTradeToast(null)} />
+          <TradeToast key="trade-toast" trade={tradeToast} onDismiss={() => setTradeToast(null)} />
         )}
       </AnimatePresence>
 
@@ -772,11 +823,15 @@ export default function Marketplace() {
                         <div className="flex items-center gap-3 flex-shrink-0">
                           <div className="text-right">
                             <p className="font-bold text-slate-900 text-sm">{listing.quantity_kg.toLocaleString()} kg</p>
-                            <p className="text-xs text-emerald-700 font-bold">UGX {listing.price_per_kg.toLocaleString()}/kg</p>
+                            <p className="text-xs text-emerald-700 font-bold">{listing.currency} {listing.price_per_kg.toLocaleString()}/kg</p>
                           </div>
                           {mpUser?.role === 'buyer' && (
                             <button
-                              onClick={() => { setPrefillCrop(listing.crop); setShowAddBuyOrder(true); }}
+                              onClick={() => { 
+                                setPrefillCrop(listing.crop); 
+                                setPrefillCurrency(listing.currency);
+                                setShowAddBuyOrder(true); 
+                              }}
                               className="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors opacity-0 group-hover:opacity-100"
                             >
                               Buy
@@ -837,7 +892,7 @@ export default function Marketplace() {
                         </div>
                         <div className="text-right">
                           <p className="font-black text-slate-900 text-sm tracking-tighter">{order.quantity_kg.toLocaleString()} KG</p>
-                          <p className="text-[9px] text-blue-700 font-black uppercase tracking-widest">MAX {order.max_price_per_kg.toLocaleString()}</p>
+                          <p className="text-[9px] text-blue-700 font-black uppercase tracking-widest">MAX {order.currency} {order.max_price_per_kg.toLocaleString()}</p>
                         </div>
                       </motion.div>
                     ))}
@@ -868,7 +923,7 @@ export default function Marketplace() {
                     <div key={listing.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
                       <div>
                         <p className="font-black text-slate-950 uppercase tracking-tighter">{listing.crop}</p>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{listing.quantity_kg} KG · UGX {listing.price_per_kg.toLocaleString()}/KG</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{listing.quantity_kg} KG · {listing.currency} {listing.price_per_kg.toLocaleString()}/KG</p>
                         {listing.description && <p className="text-xs text-slate-400 mt-1 font-medium">{listing.description}</p>}
                       </div>
                       <div className="flex items-center gap-4">
@@ -906,7 +961,7 @@ export default function Marketplace() {
                     <div key={order.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
                       <div>
                         <p className="font-black text-slate-950 uppercase tracking-tighter">{order.crop}</p>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{order.quantity_kg} KG · MAX UGX {order.max_price_per_kg.toLocaleString()}/KG</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{order.quantity_kg} KG · MAX {order.currency} {order.max_price_per_kg.toLocaleString()}/KG</p>
                         {order.description && <p className="text-xs text-slate-400 mt-1 font-medium">{order.description}</p>}
                       </div>
                       <div className="flex items-center gap-4">
@@ -939,59 +994,76 @@ export default function Marketplace() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {trades.map(trade => {
-                    const isSeller = trade.seller_id === mpUser.id;
-                    return (
-                      <motion.div key={trade.id}
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                        className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-[9px] uppercase tracking-tighter flex-shrink-0 ${isSeller ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
-                              TRADE
-                            </div>
-                            <div>
-                              <p className="font-black text-slate-950 uppercase tracking-tighter">{trade.crop}</p>
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                {trade.quantity_kg} KG · UGX {trade.agreed_price_per_kg.toLocaleString()}/KG
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="font-black text-slate-950 tracking-tighter text-sm">TOTAL: {trade.total_value.toLocaleString()}</p>
-                            <span className={`px-2 py-0.5 text-[9px] font-black rounded uppercase tracking-widest ${trade.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                              {trade.status}
-                            </span>
-                          </div>
-                        </div>
-
-                        {trade.status === 'pending' && (
-                          <div className="mt-4 flex justify-end">
-                            <button
-                              onClick={() => markTradeCompleted(trade.id)}
-                              className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-sm"
-                            >
-                              Finalize Transaction
-                            </button>
-                          </div>
-                        )}
-                        <div className={`mt-3 pt-3 border-t border-slate-200 flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest text-slate-500`}>
-                          {isSeller ? (
-                            <>
-                              <span>Buyer: <strong className="text-slate-900">{trade.buyer_name}</strong> · {trade.buyer_district}</span>
-                              {trade.buyer_phone && <span className="text-indigo-600 font-black">{trade.buyer_phone}</span>}
-                            </>
-                          ) : (
-                            <>
-                              <span>Seller: <strong className="text-slate-900">{trade.seller_name}</strong> · {trade.seller_district}</span>
-                              {trade.seller_phone && <span className="text-indigo-600 font-black">{trade.seller_phone}</span>}
-                            </>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                <div className="overflow-x-auto bg-white rounded-3xl border border-slate-100 shadow-sm">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crop</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Value</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Parties</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Completed On</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {trades.map(trade => {
+                        const isSeller = trade.seller_id === mpUser.id;
+                        return (
+                          <motion.tr 
+                            key={trade.id}
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="hover:bg-slate-50/50 transition-colors"
+                          >
+                            <td className="px-6 py-4">
+                              <span className="font-black text-slate-900 uppercase tracking-tight">{trade.crop}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-xs font-bold text-slate-600">{trade.quantity_kg} KG</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-xs font-black text-slate-900">{trade.currency} {trade.total_value.toLocaleString()}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] font-black text-slate-900 uppercase">S: {trade.seller_name}</span>
+                                <span className="text-[10px] font-black text-slate-900 uppercase">B: {trade.buyer_name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-widest ${
+                                trade.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                              }`}>
+                                {trade.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                {trade.completed_at ? format(new Date(trade.completed_at), 'dd MMM yyyy') : '--'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {trade.status === 'pending' && isSeller && (
+                                <button
+                                  onClick={() => confirmReceipt(trade.id)}
+                                  className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"
+                                >
+                                  Finalize
+                                </button>
+                              )}
+                              {trade.status === 'pending' && !isSeller && (
+                                <span className="text-[9px] font-black text-slate-300 uppercase italic">Awaiting Seller</span>
+                              )}
+                              {trade.status === 'completed' && (
+                                <span className="text-emerald-500 font-black text-[9px] uppercase">Verified</span>
+                              )}
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

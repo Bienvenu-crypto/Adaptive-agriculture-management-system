@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please sign in as a seller.' }, { status: 401 });
     }
 
-    const { crop, quantity_kg, price_per_kg, description } = await req.json();
+    const { crop, quantity_kg, price_per_kg, currency, description } = await req.json();
     if (!crop || !quantity_kg || !price_per_kg) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -70,18 +70,19 @@ export async function POST(req: Request) {
 
     const id = crypto.randomUUID();
     db.prepare(
-      'INSERT INTO listings (id, seller_id, crop, quantity_kg, price_per_kg, description) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(id, seller.id, crop.trim(), quantity_kg, price_per_kg, description || null);
+      'INSERT INTO listings (id, seller_id, crop, quantity_kg, price_per_kg, currency, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, seller.id, crop.trim(), quantity_kg, price_per_kg, currency || 'UGX', description || null);
 
     // === REVERSE MATCHING ENGINE (PARTIAL FULFILLMENT) ===
     const openOrders = db.prepare(`
       SELECT * FROM buy_orders
       WHERE LOWER(crop) = LOWER(?)
         AND max_price_per_kg >= ?
+        AND currency = ?
         AND status = 'open'
         AND buyer_id != ?
       ORDER BY max_price_per_kg DESC, created_at ASC
-    `).all(crop.trim(), price_per_kg, seller.id) as any[];
+    `).all(crop.trim(), price_per_kg, currency || 'UGX', seller.id) as any[];
 
     let remainingListingQty = quantity_kg;
     const tradesCreated = [];
@@ -95,8 +96,8 @@ export async function POST(req: Request) {
       const totalValue = agreedPrice * matchQty;
 
       db.prepare(
-        'INSERT INTO trades (id, listing_id, buy_order_id, seller_id, buyer_id, crop, quantity_kg, agreed_price_per_kg, total_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).run(tradeId, id, order.id, seller.id, order.buyer_id, crop.trim(), matchQty, agreedPrice, totalValue);
+        'INSERT INTO trades (id, listing_id, buy_order_id, seller_id, buyer_id, crop, quantity_kg, agreed_price_per_kg, total_value, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(tradeId, id, order.id, seller.id, order.buyer_id, crop.trim(), matchQty, agreedPrice, totalValue, currency || 'UGX');
 
       // Update Listing: Subtract quantity (we'll do final status update outside loop)
       remainingListingQty -= matchQty;
@@ -138,6 +139,7 @@ export async function POST(req: Request) {
     const listing = db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
     return NextResponse.json({ listing, trade: tradesCreated[0] || null, allTrades: tradesCreated }, { status: 201 });
   } catch (error) {
+    console.error('Create listing error:', error);
     return NextResponse.json({ error: 'Failed to create listing' }, { status: 500 });
   }
 }

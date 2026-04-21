@@ -88,6 +88,7 @@ db.exec(`
     crop TEXT NOT NULL,
     quantity_kg REAL NOT NULL,
     price_per_kg REAL NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'UGX',
     description TEXT,
     status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'sold', 'cancelled')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -100,6 +101,7 @@ db.exec(`
     crop TEXT NOT NULL,
     quantity_kg REAL NOT NULL,
     max_price_per_kg REAL NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'UGX',
     description TEXT,
     status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'fulfilled', 'cancelled')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -116,7 +118,11 @@ db.exec(`
     quantity_kg REAL NOT NULL,
     agreed_price_per_kg REAL NOT NULL,
     total_value REAL NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'UGX',
     status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'completed', 'disputed')),
+    payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK(payment_status IN ('unpaid', 'pending', 'paid')),
+    payment_method TEXT,
+    payment_phone TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (listing_id) REFERENCES listings(id),
     FOREIGN KEY (buy_order_id) REFERENCES buy_orders(id),
@@ -151,14 +157,23 @@ db.exec(`
 
 try {
   db.exec('ALTER TABLE users ADD COLUMN district TEXT');
-} catch (e) {
-  // Column might already exist
-}
+} catch (e) {}
+
+try {
+  db.exec('ALTER TABLE trades ADD COLUMN completed_at DATETIME');
+} catch (e) {}
 
 try {
   db.exec('ALTER TABLE chats ADD COLUMN timestamp DATETIME DEFAULT CURRENT_TIMESTAMP');
-} catch (e) {
-  // Column might already exist
-}
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE listings ADD COLUMN currency TEXT NOT NULL DEFAULT 'UGX'");
+  db.exec("ALTER TABLE buy_orders ADD COLUMN currency TEXT NOT NULL DEFAULT 'UGX'");
+  db.exec("ALTER TABLE trades ADD COLUMN currency TEXT NOT NULL DEFAULT 'UGX'");
+  db.exec('ALTER TABLE trades ADD COLUMN payment_status TEXT NOT NULL DEFAULT "unpaid"');
+  db.exec('ALTER TABLE trades ADD COLUMN payment_method TEXT');
+  db.exec('ALTER TABLE trades ADD COLUMN payment_phone TEXT');
+} catch (e) {}
 
 export default db;

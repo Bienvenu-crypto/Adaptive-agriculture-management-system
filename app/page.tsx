@@ -78,20 +78,22 @@ export default function Page() {
       />
 
       {/* Desktop Sidebar */}
-      <nav className="fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-black/5 p-8 hidden lg:flex flex-col z-50 overflow-y-auto">
+      <nav className="fixed left-0 top-0 bottom-0 w-72 bg-[#0B1223] border-r border-white/5 p-8 hidden lg:flex flex-col z-50 overflow-y-auto">
         <div
           className="flex flex-col mb-12 cursor-pointer"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <span className="text-[1.3rem] font-bold text-[#014D3E] leading-[1.2] tracking-tight">Global Agriculture</span>
-          <span className="text-[1.3rem] font-bold text-[#014D3E] leading-[1.2] tracking-tight">Management System</span>
+          <span className="text-[1.3rem] font-bold text-white leading-[1.2] tracking-tight">Adaptive Agriculture</span>
+          <span className="text-[1.3rem] font-bold text-emerald-400 leading-[1.2] tracking-tight">Management System</span>
         </div>
 
         <div className="flex-1 space-y-2 mt-4">
           <button
             onClick={() => switchView('chat')}
-            className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'chat' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-              }`}
+            className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'chat' 
+              ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+              : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+            }`}
           >
             Advisory
           </button>
@@ -100,76 +102,85 @@ export default function Page() {
             <>
               <button
                 onClick={() => switchView('iot')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'iot' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'iot' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Metrics
               </button>
               <button
                 onClick={() => switchView('weather')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'weather' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Weather
               </button>
 
               <button
                 onClick={() => switchView('recommendation')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'recommendation' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'recommendation' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Crops
               </button>
               <button
                 onClick={() => switchView('calendar')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'calendar' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'calendar' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Calendar
               </button>
 
               <button
                 onClick={() => switchView('market')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'market' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'market' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Market
               </button>
               <button
                 onClick={() => switchView('marketplace')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'marketplace' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'marketplace' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Exchange
               </button>
               <button
                 onClick={() => switchView('resources')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === 'resources' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'resources' 
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                }`}
               >
                 Library
               </button>
 
-              <div className="pt-8">
-                <Link href="/admin" className="w-full block px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors">
-                  Control
-                </Link>
-              </div>
             </>
           )}
         </div>
 
         {!user && (
-          <div className="mt-auto pt-8 border-t border-black/5 space-y-3">
+          <div className="mt-auto pt-8 border-t border-white/5 space-y-3">
             <button
               onClick={() => openAuthModal('login')}
-              className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50 border border-slate-100 w-full"
+              className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 w-full hover:bg-white/10"
             >
               Sign In
             </button>
             <button
               onClick={() => openAuthModal('signup')}
-              className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 w-full"
+              className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600 w-full hover:bg-emerald-500"
             >
               Register
             </button>
@@ -215,7 +226,7 @@ export default function Page() {
       <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/5 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col" onClick={() => switchView(user ? 'iot' : 'chat')}>
-            <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Global Agriculture</span>
+            <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Adaptive Agriculture</span>
             <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Management System</span>
           </div>
 
@@ -264,17 +275,14 @@ export default function Page() {
                         <p className="text-xs font-bold text-emerald-950 mt-1 lowercase">{user.email}</p>
                       </div>
                     </div>
-                    <button onClick={() => switchView('chat')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'chat' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Advisory</button>
-                    <button onClick={() => switchView('iot')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'iot' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Metrics</button>
-                    <button onClick={() => switchView('recommendation')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'recommendation' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Crops</button>
-                    <button onClick={() => switchView('calendar')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'calendar' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Calendar</button>
-                    <button onClick={() => switchView('market')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'market' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Market</button>
-                    <button onClick={() => switchView('marketplace')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'marketplace' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Exchange</button>
-                    <button onClick={() => switchView('weather')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Weather</button>
-                    <button onClick={() => switchView('resources')} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'resources' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>Library</button>
-                    <Link href="/admin" className="px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest mt-2 block text-center">
-                      Admin Control
-                    </Link>
+                    <button onClick={() => switchView('chat')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'chat' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Advisory</button>
+                    <button onClick={() => switchView('iot')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'iot' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Metrics</button>
+                    <button onClick={() => switchView('recommendation')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'recommendation' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Crops</button>
+                    <button onClick={() => switchView('calendar')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'calendar' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Calendar</button>
+                    <button onClick={() => switchView('market')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'market' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Market</button>
+                    <button onClick={() => switchView('marketplace')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'marketplace' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Exchange</button>
+                    <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'weather' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Weather</button>
+                    <button onClick={() => switchView('resources')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'resources' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Library</button>
                     <button onClick={() => logout()} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 mt-4 opacity-70">
                       Sign Out
                     </button>

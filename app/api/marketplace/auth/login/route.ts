@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const { email, password, role } = await req.json();
+    const { email, password, role, phone } = await req.json();
 
     if (!email || !password || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -17,6 +17,12 @@ export async function POST(req: Request) {
 
     if (!user || !verifyPassword(password, user.password_hash)) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Update phone if provided and not already set (or if changed)
+    if (phone && phone.trim() !== '' && phone.trim() !== user.phone) {
+      db.prepare('UPDATE marketplace_users SET phone = ? WHERE id = ?').run(phone.trim(), user.id);
+      user.phone = phone.trim();
     }
 
     const sessionId = crypto.randomBytes(32).toString('hex');

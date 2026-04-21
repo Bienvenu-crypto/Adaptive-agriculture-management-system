@@ -57,7 +57,7 @@ Include specific estimated dates (calculated from the planting date) for key pha
 Make the advice highly actionable for a smallholder farmer.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: [{ parts: [{ text: prompt }] }],
         config: {
           responseMimeType: "application/json",
