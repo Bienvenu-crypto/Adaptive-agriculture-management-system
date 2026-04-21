@@ -164,6 +164,27 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_crop_calendars_user ON crop_calendars(user_email);
+
+  CREATE TABLE IF NOT EXISTS weather_cache (
+    location_key TEXT PRIMARY KEY,
+    data_json TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS market_prices_cache (
+    crop_name TEXT PRIMARY KEY,
+    data_json TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS sensor_readings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    moisture REAL,
+    temperature REAL,
+    ph REAL,
+    battery_level REAL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 try {

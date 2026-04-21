@@ -164,13 +164,36 @@ export default function ChatInterface({ location }: LocationProps) {
 
       const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
 
-      const response = await ai.models.generateContent({
-        model,
-        contents: [{ parts: promptParts }],
-        config: {
-          systemInstruction: dynamicSystemInstruction,
-        },
-      });
+      const executeWithRetry = async (retries = 5, initialDelay = 2000) => {
+        for (let i = 0; i < retries; i++) {
+          try {
+            return await ai.models.generateContent({
+              model,
+              contents: [{ parts: promptParts }],
+              config: {
+                systemInstruction: dynamicSystemInstruction,
+              },
+            });
+          } catch (err: any) {
+            console.warn(`Chatbot attempt ${i + 1} failed:`, err);
+            // Retry on 503 (High Demand) or 429 (Quota)
+            const isRetryable = err.status === 503 || err.status === 429 || 
+                                err.message?.includes('503') || err.message?.includes('429') ||
+                                err.message?.includes('demand') || err.message?.includes('quota');
+            
+            if (isRetryable && i < retries - 1) {
+              const waitTime = initialDelay * Math.pow(2, i);
+              console.log(`Retrying chatbot in ${waitTime}ms...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              continue;
+            }
+            throw err;
+          }
+        }
+      };
+
+      const response = await executeWithRetry();
+      if (!response) throw new Error("I'm currently experiencing high demand. Please try again in a moment.");
 
       const botMessage: Message = {
         id: crypto.randomUUID(),

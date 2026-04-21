@@ -340,7 +340,7 @@ export default function Page() {
                   </h2>
                   <p className="text-slate-500 text-lg">Live telemetry from your smart agricultural nodes.</p>
                 </div>
-                <IoTDashboard />
+                <IoTDashboard location={location} />
               </div>
             )}
 
