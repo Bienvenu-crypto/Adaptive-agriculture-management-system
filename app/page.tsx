@@ -90,10 +90,10 @@ export default function Page() {
         <div className="flex-1 space-y-2 mt-4">
           <button
             onClick={() => switchView('chat')}
-            className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'chat' 
-              ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+            className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'chat'
+              ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
               : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-            }`}
+              }`}
           >
             Advisory
           </button>
@@ -102,66 +102,66 @@ export default function Page() {
             <>
               <button
                 onClick={() => switchView('iot')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'iot' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'iot'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
                 Metrics
               </button>
               <button
                 onClick={() => switchView('weather')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
                 Weather
               </button>
 
               <button
                 onClick={() => switchView('recommendation')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'recommendation' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'recommendation'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
                 Crops
               </button>
               <button
                 onClick={() => switchView('calendar')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'calendar' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'calendar'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
                 Calendar
               </button>
 
               <button
                 onClick={() => switchView('market')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'market' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'market'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
                 Market
               </button>
               <button
                 onClick={() => switchView('marketplace')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'marketplace' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'marketplace'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
-                Exchange
+                Trade
               </button>
               <button
                 onClick={() => switchView('resources')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'resources' 
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2' 
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'resources'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
                   : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                }`}
+                  }`}
               >
                 Library
               </button>

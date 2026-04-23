@@ -38,6 +38,23 @@ export default function ChatInterface({ location }: LocationProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedLang, setSelectedLang] = useState('en');
+
+  const languages = [
+    { code: 'en', name: 'English', welcome: "Hello! I am your Adaptive Agriculture Management System advisor. I can help you with expert agricultural guidance tailored to your specific location and climate. How can I help you with your crops today?" },
+    { code: 'fr', name: 'Français', welcome: "Bonjour ! Je suis votre conseiller du Système Adaptatif de Gestion Agricole. Je peux vous aider avec des conseils agricoles experts adaptés à votre emplacement et à votre climat. Comment puis-je vous aider avec vos cultures aujourd'hui ?" },
+    { code: 'lg', name: 'Luganda', welcome: "Ki kati! Nze mubiwabuzibwa wo mu nteekateeka y'okuddukanya ebyobulimi ekyemala. Nyinza okukuyamba n'obubaka obukuguse obw'ebyo obulimi obukwatagana n'ekifo kyo n'obudde. Nnyinza okukuyamba ntya n'ebirime byo leero?" },
+    { code: 'sw', name: 'Swahili', welcome: "Habari! Mimi ni mshauri wako wa Mfumo wa Kusimamia Kilimo Unaojirekebisha. Naweza kukusaidia kwa mwongozo wa kitaalamu wa kilimo uliowekwa kulingana na eneo lako na hali ya hewa. Naweza kukusaidia vipi na mazao yako leo?" },
+    { code: 'rw', name: 'Kinyarwanda', welcome: "Muraho! Ndi umujyanama wanyu wa Sisitemu yo Gucunga Ubuhinzi Buhinduka. Nshobora kubafasha n’inama z’obuhinzi z’inzobere zihuye n’akarere kanyu n’ikirere. Nabafasha nte kubuhinzi bwanyu uyu munsi?" }
+  ];
+
+  const handleLangChange = (langCode: string) => {
+    setSelectedLang(langCode);
+    const lang = languages.find(l => l.code === langCode);
+    if (lang && messages.length === 1 && messages[0].id === '1') {
+      setMessages([{ ...messages[0], content: lang.welcome }]);
+    }
+  };
 
   const fetchHistory = async () => {
     if (user?.email) {
@@ -162,7 +179,8 @@ export default function ChatInterface({ location }: LocationProps) {
         ? `The user is currently located in or near: ${location.name} (Latitude: ${location.lat}, Longitude: ${location.lon}). Provide advice specific to this region's climate, soil, and typical agricultural practices.`
         : "The user's specific location is unknown, but provide best-practice global agricultural advice.";
 
-      const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices.`;
+      const preferredLanguage = languages.find(l => l.code === selectedLang)?.name || 'English';
+      const dynamicSystemInstruction = `${AGROBOT_SYSTEM_INSTRUCTION}\n\nToday's date is: ${currentDate}.\n\nLOCATION CONTEXT:\n${locationContext}\n\nPREFFERED LANGUAGE: ${preferredLanguage}.\n\nAlways use this date and location context when answering questions about time, seasons, weather, or regional practices. Respond in the preferred language unless the user switch to another supported language.`;
 
       const executeWithRetry = async (retries = 5, initialDelay = 2000) => {
         for (let i = 0; i < retries; i++) {
@@ -228,6 +246,15 @@ export default function ChatInterface({ location }: LocationProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <select 
+            value={selectedLang}
+            onChange={(e) => handleLangChange(e.target.value)}
+            className="px-2 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors cursor-pointer outline-none"
+          >
+            {languages.map(lang => (
+              <option key={lang.code} value={lang.code}>{lang.name}</option>
+            ))}
+          </select>
           {user && (
             <>
               <button
