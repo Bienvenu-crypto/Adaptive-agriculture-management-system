@@ -447,7 +447,7 @@ export default function AdminDashboard() {
                   {/* TRADES LOG */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <h3 className="text-base font-bold px-8 py-6 bg-slate-50 border-b border-slate-200 text-slate-950 uppercase tracking-widest">
-                       Transaction Vault
+                      Transaction Vault
                     </h3>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
