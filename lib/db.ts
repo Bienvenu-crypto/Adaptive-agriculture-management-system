@@ -12,6 +12,8 @@ if (process.env.NODE_ENV !== 'production') globalForDb.db = db;
 
 // Enable WAL mode for better concurrency and performance
 db.pragma('journal_mode = WAL');
+// Faster synchronous mode for WAL
+db.pragma('synchronous = NORMAL');
 // Enable foreign key constraints
 db.pragma('foreign_keys = ON');
 
@@ -206,6 +208,10 @@ try {
   db.exec('ALTER TABLE trades ADD COLUMN payment_status TEXT NOT NULL DEFAULT "unpaid"');
   db.exec('ALTER TABLE trades ADD COLUMN payment_method TEXT');
   db.exec('ALTER TABLE trades ADD COLUMN payment_phone TEXT');
+} catch (e) {}
+
+try {
+  db.exec('ALTER TABLE marketplace_users ADD COLUMN is_subscribed INTEGER DEFAULT 0');
 } catch (e) {}
 
 export default db;

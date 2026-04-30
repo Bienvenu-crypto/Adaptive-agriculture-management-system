@@ -7,15 +7,19 @@ const ITERATIONS = 10000;
 const KEY_LENGTH = 64;
 const DIGEST = 'sha512';
 
-export function hashPassword(password: string): string {
+import { promisify } from 'util';
+
+const pbkdf2 = promisify(crypto.pbkdf2);
+
+export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
-  const hash = crypto.pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, DIGEST).toString('hex');
+  const hash = (await pbkdf2(password, salt, ITERATIONS, KEY_LENGTH, DIGEST)).toString('hex');
   return `${salt}:${hash}`;
 }
 
-export function verifyPassword(password: string, storedHash: string): boolean {
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   const [salt, hash] = storedHash.split(':');
-  const verifyHash = crypto.pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, DIGEST).toString('hex');
+  const verifyHash = (await pbkdf2(password, salt, ITERATIONS, KEY_LENGTH, DIGEST)).toString('hex');
   return hash === verifyHash;
 }
 
@@ -36,8 +40,8 @@ export async function setSessionCookie(sessionId: string) {
   const cookieStore = await cookies();
   cookieStore.set('agrobot_session', sessionId, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60, // 7 days
     path: '/',
   });

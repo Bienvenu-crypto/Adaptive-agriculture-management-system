@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     }
 
     const appUsers = db.prepare('SELECT id, name, email, district, created_at FROM users ORDER BY created_at DESC').all();
-    const marketplaceUsers = db.prepare('SELECT id, name, email, phone, district, role, created_at FROM marketplace_users ORDER BY created_at DESC').all();
+    const marketplaceUsers = db.prepare('SELECT id, name, email, phone, district, role, is_subscribed, created_at FROM marketplace_users ORDER BY created_at DESC').all();
     const chats = db.prepare('SELECT id, user_email, role, content, image_url, timestamp FROM chats ORDER BY timestamp DESC').all();
     const listings = db.prepare('SELECT l.*, mu.name as seller_name FROM listings l JOIN marketplace_users mu ON l.seller_id = mu.id ORDER BY l.created_at DESC').all();
     const orders = db.prepare('SELECT bo.*, mu.name as buyer_name FROM buy_orders bo JOIN marketplace_users mu ON bo.buyer_id = mu.id ORDER BY bo.created_at DESC').all();
@@ -51,6 +51,8 @@ export async function DELETE(req: Request) {
       db.prepare('DELETE FROM listings WHERE id = ?').run(id);
     } else if (type === 'order') {
       db.prepare('DELETE FROM buy_orders WHERE id = ?').run(id);
+    } else if (type === 'trade') {
+      db.prepare('DELETE FROM trades WHERE id = ?').run(id);
     }
 
     return NextResponse.json({ ok: true });
@@ -72,7 +74,7 @@ export async function PATCH(req: Request) {
     if (type === 'app-user') {
       db.prepare('UPDATE users SET name = ?, email = ?, district = ? WHERE id = ?').run(data.name, data.email, data.district, id);
     } else if (type === 'marketplace-user') {
-      db.prepare('UPDATE marketplace_users SET name = ?, email = ?, phone = ?, district = ?, role = ? WHERE id = ?').run(data.name, data.email, data.phone, data.district, data.role, id);
+      db.prepare('UPDATE marketplace_users SET name = ?, email = ?, phone = ?, district = ?, role = ?, is_subscribed = ? WHERE id = ?').run(data.name, data.email, data.phone, data.district, data.role, data.is_subscribed, id);
     } else if (type === 'listing') {
       db.prepare('UPDATE listings SET crop = ?, quantity_kg = ?, price_per_kg = ? WHERE id = ?').run(data.crop, data.quantity_kg, data.price_per_kg, id);
     } else if (type === 'order') {

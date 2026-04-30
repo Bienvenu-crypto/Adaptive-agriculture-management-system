@@ -159,7 +159,7 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
   };
 
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-black/5 shadow-sm">
+    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <div className="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-600 font-black text-[10px] uppercase tracking-widest">
@@ -173,38 +173,38 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Nitrogen (N)</label>
-              <input type="number" name="nitrogen" value={formData.nitrogen} onChange={handleChange} placeholder="mg/kg" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
+              <input type="number" name="nitrogen" autoComplete="off" value={formData.nitrogen} onChange={handleChange} placeholder="mg/kg" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Phosphorus (P)</label>
-              <input type="number" name="phosphorus" value={formData.phosphorus} onChange={handleChange} placeholder="mg/kg" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
+              <input type="number" name="phosphorus" autoComplete="off" value={formData.phosphorus} onChange={handleChange} placeholder="mg/kg" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Potassium (K)</label>
-              <input type="number" name="potassium" value={formData.potassium} onChange={handleChange} placeholder="mg/kg" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
+              <input type="number" name="potassium" autoComplete="off" value={formData.potassium} onChange={handleChange} placeholder="mg/kg" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Soil pH</label>
-              <input type="number" step="0.1" name="ph" value={formData.ph} onChange={handleChange} placeholder="0.0 - 14.0" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
+              <input type="number" step="0.1" name="ph" autoComplete="off" value={formData.ph} onChange={handleChange} placeholder="0.0 - 14.0" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Rainfall (mm)</label>
-              <input type="number" name="rainfall" value={formData.rainfall} onChange={handleChange} placeholder="mm/year" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
+              <input type="number" name="rainfall" autoComplete="off" value={formData.rainfall} onChange={handleChange} placeholder="mm/year" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Temp (°C)</label>
-              <input type="number" name="temperature" value={formData.temperature} onChange={handleChange} placeholder="°C" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
+              <input type="number" name="temperature" autoComplete="off" value={formData.temperature} onChange={handleChange} placeholder="°C" className="w-full bg-slate-50 border border-black/5 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required />
             </div>
           </div>
           <button
             type="button"
             onClick={handleAutoDetect}
             disabled={detecting || loading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all border border-emerald-100 mb-3"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all mb-3"
           >
             <div className={`w-2 h-2 rounded-full ${detecting ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500'}`} />
             {detecting ? 'Detecting Environmental Data...' : 'Auto-Detect Environment'}
@@ -221,7 +221,7 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
 
         <div className="relative min-h-[400px]">
           {loading ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-[2rem]">
               <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Running analysis...</p>
             </div>
@@ -231,7 +231,7 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
               animate={{ opacity: 1, scale: 1 }}
               className="h-full flex flex-col"
             >
-              <div id="recommendation-result" className="flex-1 bg-emerald-50/50 rounded-[2rem] border border-emerald-100 p-8 overflow-y-auto mb-4">
+              <div id="recommendation-result" className="flex-1 bg-emerald-50/50 rounded-[2rem] p-8 overflow-y-auto mb-4">
                 <div className="prose prose-sm max-w-none prose-emerald text-slate-700">
                   <ReactMarkdown>{result}</ReactMarkdown>
                 </div>
@@ -245,7 +245,7 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
               </button>
             </motion.div>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200 text-center p-8">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-[2rem] text-center p-8">
               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Awaiting Input Parameters</p>
               <p className="text-sm font-bold text-slate-400 max-w-[240px]">Enter soil and climate data or use "Auto-Detect" to generate localized crop recommendations.</p>
             </div>

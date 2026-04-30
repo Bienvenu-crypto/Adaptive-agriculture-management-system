@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       .prepare('SELECT * FROM marketplace_users WHERE email = ? AND role = ?')
       .get(email, role) as any;
 
-    if (!user || !verifyPassword(password, user.password_hash)) {
+    if (!user || !(await verifyPassword(password, user.password_hash))) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
@@ -41,6 +41,7 @@ export async function POST(req: Request) {
         phone: user.phone,
         district: user.district,
         role: user.role,
+        is_subscribed: user.is_subscribed
       },
     });
     response.cookies.set('mp_session', sessionId, {

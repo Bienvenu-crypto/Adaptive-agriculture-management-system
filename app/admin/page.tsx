@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 
-type Tab = 'overview' | 'marketplace' | 'chats' | 'users';
+type Tab = 'overview' | 'marketplace' | 'chats' | 'users' | 'listings' | 'orders' | 'trades';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -69,16 +69,19 @@ export default function AdminDashboard() {
   }, [isAuthenticated]);
 
   const handleDelete = async (type: string, id: string) => {
-    if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+    if (!window.confirm(`Delete this ${type}? This cannot be undone.`)) return;
     try {
       const res = await fetch(`/api/admin/data?secret=agrobot-admin-2026`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, id }),
       });
-      if (res.ok) fetchAllData();
-    } catch (err) {
-      alert('Delete failed');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Delete failed');
+      fetchAllData();
+    } catch (err: any) {
+      alert(`Delete failed: ${err.message}`);
+      console.error('Delete error:', err);
     }
   };
 
@@ -113,31 +116,32 @@ export default function AdminDashboard() {
         <div className="absolute top-[-10%] left-[-5%] w-96 h-96 bg-cyan-500/20 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-5%] w-96 h-96 bg-emerald-500/20 rounded-full blur-[120px]"></div>
 
-        <Link href="/" className="absolute top-12 left-12 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-[0.4em] transition-all z-10 px-6 py-2.5 border border-white/10 rounded-full hover:bg-white/5">
+        <Link href="/" className="absolute top-12 left-12 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-[0.4em] transition-all z-10 px-6 py-2.5 rounded-full hover:bg-white/5 bg-white/5 backdrop-blur-md">
           Return
         </Link>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/5 backdrop-blur-3xl p-12 rounded-[3.5rem] w-full max-w-md relative z-10 border border-white/10 shadow-3xl"
+          className="bg-white/5 backdrop-blur-3xl p-12 rounded-[3.5rem] w-full max-w-md relative z-10 shadow-3xl"
         >
           <div className="flex justify-center mb-10">
-            <div className="bg-cyan-500/10 px-6 py-2 rounded-full text-cyan-400 font-black text-[10px] uppercase tracking-[0.5em] border border-cyan-500/20">
+            <div className="bg-cyan-500/10 px-6 py-2 rounded-full text-cyan-400 font-black text-[10px] uppercase tracking-[0.5em]">
               Admin Vault
             </div>
           </div>
           <h1 className="text-4xl font-black text-center text-white mb-3 uppercase tracking-tighter">Console</h1>
           <p className="text-[10px] font-bold text-slate-500 text-center mb-12 px-4 uppercase tracking-[0.2em] leading-loose opacity-60">Authorize Secure Portal Access</p>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
             <div className="relative group">
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="ACCESS TOKEN"
-                className="w-full px-8 py-5 rounded-2xl bg-white/5 border border-white/10 text-white focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-500/50 outline-none transition-all font-black text-[12px] uppercase tracking-[0.3em] placeholder:text-slate-700"
+                autoComplete="new-password"
+                className="w-full px-8 py-5 rounded-2xl bg-white/5 text-white focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-500/50 outline-none transition-all font-black text-[12px] uppercase tracking-[0.3em] placeholder:text-slate-700"
               />
             </div>
             {error && <p className="text-red-400 text-[10px] font-black uppercase tracking-widest text-center">ERROR: {error}</p>}
@@ -171,7 +175,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#1A1C1E] font-sans">
-      <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-slate-100 p-6 hidden lg:flex flex-col z-50">
+      <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white p-6 hidden lg:flex flex-col z-50 border-r border-slate-100">
         <div className="flex items-center gap-2 mb-10 px-2">
           <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full" />
           <span className="text-lg font-bold text-[#1A1C1E]">AAMS Portal</span>
@@ -180,11 +184,14 @@ export default function AdminDashboard() {
         <nav className="flex-1 space-y-1">
           <TabButton id="overview" label="Dashboard Overview" />
           <TabButton id="marketplace" label="Marketplace Manager" />
+          <TabButton id="listings" label="Active Listings" />
+          <TabButton id="orders" label="Buy Orders" />
+          <TabButton id="trades" label="Transaction Ledger" />
           <TabButton id="chats" label="Service Logs" />
           <TabButton id="users" label="Farmer Manager" />
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-2">
+        <div className="mt-auto pt-6 flex flex-col gap-2">
           <Link href="/" className="px-5 py-3 text-sm font-bold text-slate-500 hover:text-cyan-600 transition-colors">
             Exit to Application
           </Link>
@@ -199,12 +206,18 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-6">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-3 bg-white border border-slate-200 rounded-xl lg:hidden text-slate-600"
+              className="p-3 bg-white rounded-xl lg:hidden text-slate-600 shadow-sm"
             >
               Menu
             </button>
             <h2 className="text-3xl font-extrabold text-[#1A1C1E] tracking-tight">
-              {activeTab === 'overview' ? 'Dashboard Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              {activeTab === 'overview' ? 'Dashboard Overview'
+                : activeTab === 'marketplace' ? 'Marketplace Manager'
+                : activeTab === 'listings' ? 'Active Listings'
+                : activeTab === 'orders' ? 'Buy Orders'
+                : activeTab === 'trades' ? 'Transaction Ledger'
+                : activeTab === 'chats' ? 'Service Logs'
+                : 'Farmer Manager'}
             </h2>
           </div>
 
@@ -212,11 +225,11 @@ export default function AdminDashboard() {
             <button
               onClick={fetchAllData}
               disabled={dataLoading}
-              className="px-6 py-2.5 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 hover:border-cyan-500 hover:text-cyan-500 transition-all"
+              className="px-6 py-2.5 bg-white rounded-full text-xs font-bold text-slate-500 hover:text-cyan-500 transition-all shadow-sm"
             >
               {dataLoading ? 'Syncing...' : 'Reload Data'}
             </button>
-            <div className="hidden sm:flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100">
+            <div className="hidden sm:flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full">
               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
               <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Active</span>
             </div>
@@ -236,6 +249,9 @@ export default function AdminDashboard() {
               <nav className="space-y-2 mb-12">
                 <TabButton id="overview" label="Overview" />
                 <TabButton id="marketplace" label="Marketplace" />
+                <TabButton id="listings" label="Active Listings" />
+                <TabButton id="orders" label="Buy Orders" />
+                <TabButton id="trades" label="Transaction Ledger" />
                 <TabButton id="chats" label="Chat Logs" />
                 <TabButton id="users" label="User Manager" />
               </nav>
@@ -279,7 +295,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="space-y-6">
                         {adminData.chats.slice(0, 6).map((chat: any) => (
-                          <div key={chat.id} className="flex items-start gap-6 p-6 hover:bg-slate-50 transition-all rounded-[2rem] group border border-transparent hover:border-slate-100">
+                          <div key={chat.id} className="flex items-start gap-6 p-6 hover:bg-slate-50 transition-all rounded-[2rem] group">
                             <div className={`mt-2 w-2 h-2 rounded-full shrink-0 ${chat.role === 'user' ? 'bg-cyan-400' : 'bg-emerald-400'}`}></div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-2">
@@ -288,7 +304,7 @@ export default function AdminDashboard() {
                               </div>
                               <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed font-medium">{chat.content}</p>
                             </div>
-                            <button onClick={() => handleDelete('chat', chat.id)} className="px-5 py-2.5 bg-slate-50 text-[9px] font-black text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all uppercase tracking-[0.2em] rounded-full">Terminate</button>
+                            <button onClick={() => handleDelete('chat', chat.id)} className="px-5 py-2.5 bg-red-50 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-100 transition-all uppercase tracking-[0.2em] rounded-full">Terminate</button>
                           </div>
                         ))}
                       </div>
@@ -302,7 +318,7 @@ export default function AdminDashboard() {
                           <PulseItem label="Popular Crop" val="Maize" type="TOP" />
                           <PulseItem label="Top District" val="Wakiso" type="LOC" />
                         </div>
-                        <button onClick={() => setActiveTab('marketplace')} className="w-full mt-10 py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-black text-sm transition-all border border-white/5">Go to Marketplace</button>
+                        <button onClick={() => setActiveTab('marketplace')} className="w-full mt-10 py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-black text-sm transition-all">Go to Marketplace</button>
                       </div>
                     </div>
                   </div>
@@ -311,126 +327,243 @@ export default function AdminDashboard() {
 
               {activeTab === 'chats' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="py-10 border-b border-slate-100 flex items-center justify-between mb-8">
+                  <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h2 className="text-2xl font-black tracking-tighter text-slate-950 uppercase leading-none mb-2">Interaction Vault</h2>
-                      <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.4em]">Secure record of all conversations</p>
+                      <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">Conversation Logs</h2>
+                      <p className="text-slate-400 text-xs font-medium">{adminData.chats.length} total interactions recorded</p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="bg-slate-950 text-white px-6 py-2.5 rounded-full font-black text-[9px] uppercase tracking-[0.4em] border border-slate-800">{adminData.chats.length} LOGS</div>
-                    </div>
+                    <span className="px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full">{adminData.chats.length} Logs</span>
                   </div>
-                  <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 text-left text-[0.65rem] font-black uppercase text-slate-500 tracking-[0.3em]">
-                          <th className="px-6 py-4 border-b border-r border-slate-200">Sender</th>
-                          <th className="px-6 py-4 border-b border-r border-slate-200">Role</th>
-                          <th className="px-6 py-4 border-b border-r border-slate-200 min-w-[300px]">Content</th>
-                          <th className="px-6 py-4 border-b border-r border-slate-200">Timestamp</th>
-                          <th className="px-6 py-4 border-b border-slate-200 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {adminData.chats.map((chat: any) => (
-                          <tr key={chat.id} className="group hover:bg-slate-50 transition-all">
-                            <td className="px-6 py-5 border-r border-slate-100 text-slate-900 font-bold text-sm">{chat.user_email}</td>
-                            <td className="px-6 py-5 border-r border-slate-100">
-                              <span className={`text-[0.6rem] font-black uppercase px-3 py-1.5 rounded-full border ${chat.role === 'user' ? 'bg-cyan-50 border-cyan-100 text-cyan-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'}`}>{chat.role}</span>
-                            </td>
-                            <td className="px-6 py-5 border-r border-slate-100 text-slate-600 text-[13px] font-medium leading-relaxed max-w-lg">{chat.content}</td>
-                            <td className="px-6 py-5 border-r border-slate-100 text-slate-400 text-[10px] font-bold uppercase tracking-widest">{format(new Date(chat.timestamp), 'MMM dd, HH:mm')}</td>
-                            <td className="px-6 py-5 text-right">
-                              <button onClick={() => handleDelete('chat', chat.id)} className="px-4 py-2 bg-slate-50 group-hover:bg-red-50 text-[9px] font-bold text-slate-400 group-hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100 uppercase tracking-[0.2em]">Kill</button>
-                            </td>
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-slate-900 text-left">
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">User</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Role</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[300px]">Message</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Time</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {adminData.chats.length === 0 && (
+                            <tr><td colSpan={5} className="px-6 py-16 text-center text-slate-300 text-sm font-medium">No conversations recorded yet</td></tr>
+                          )}
+                          {adminData.chats.map((chat: any) => (
+                            <tr key={chat.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-600 shrink-0">
+                                    {chat.user_email?.charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="text-sm font-semibold text-slate-800 truncate max-w-[140px]">{chat.user_email}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                  chat.role === 'user' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                                }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${
+                                    chat.role === 'user' ? 'bg-blue-500' : 'bg-emerald-500'
+                                  }`} />
+                                  {chat.role}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-slate-600 text-sm leading-relaxed max-w-sm">
+                                <p className="line-clamp-2">{chat.content}</p>
+                              </td>
+                              <td className="px-6 py-4 text-slate-400 text-xs font-medium whitespace-nowrap">
+                                {format(new Date(chat.timestamp), 'MMM dd, HH:mm')}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <button onClick={() => handleDelete('chat', chat.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Delete</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
 
               {activeTab === 'users' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="py-10 border-b border-slate-100 bg-transparent flex justify-between items-center mb-8">
+                  <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h2 className="text-2xl font-black tracking-tighter text-slate-950 uppercase mb-2">Farmer Directory</h2>
-                      <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.4em]">Strategic Network Database</p>
+                      <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">Farmer Directory</h2>
+                      <p className="text-slate-400 text-xs font-medium">{adminData.appUsers.length} registered farmers</p>
                     </div>
-                    <div className="flex gap-2">
-                      <span className="bg-slate-950 text-white px-6 py-2.5 rounded-full font-black text-[9px] uppercase tracking-[0.4em] border border-slate-800">{adminData.appUsers.length} MEMBERS</span>
-                    </div>
+                    <span className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full">{adminData.appUsers.length} Members</span>
                   </div>
-                  <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <table className="w-full border-collapse text-left">
-                      <thead>
-                        <tr className="bg-slate-50 text-[0.65rem] font-black uppercase text-slate-500 tracking-[0.3em]">
-                          <th className="px-6 py-4 border-b border-r border-slate-200">Member Identity</th>
-                          <th className="px-8 py-4 border-b border-r border-slate-200">Strategic Location</th>
-                          <th className="px-8 py-4 border-b border-r border-slate-200">Deployment Date</th>
-                          <th className="px-8 py-4 border-b border-slate-200 text-right">Operational Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {adminData.appUsers.map((u: any) => (
-                          <tr key={u.id} className="hover:bg-slate-50 transition-all group">
-                            <td className="px-6 py-5 border-r border-slate-100">
-                              <div className="font-bold text-slate-950 text-sm">{u.name}</div>
-                              <div className="text-[10px] text-slate-400 font-bold lowercase mt-0.5">{u.email}</div>
-                            </td>
-                            <td className="px-8 py-5 border-r border-slate-100 text-slate-500 font-bold uppercase tracking-tight text-[12px]">{u.district || 'Unknown Area'}</td>
-                            <td className="px-8 py-5 border-r border-slate-100 text-slate-300 text-[10px] font-bold uppercase tracking-widest">{format(new Date(u.created_at), 'MMMM dd, yyyy')}</td>
-                            <td className="px-8 py-5 text-right flex justify-end gap-3 translate-x-4 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all items-center">
-                              <button onClick={() => setEditingItem({ type: 'app-user', item: u })} className="px-5 py-2 bg-slate-50 text-[9px] font-bold text-slate-400 hover:bg-cyan-600 hover:text-white rounded-lg uppercase tracking-widest transition-all">Mod</button>
-                              <button onClick={() => handleDelete('app-user', u.id)} className="px-5 py-2 bg-slate-50 text-[9px] font-bold text-slate-400 hover:bg-red-500 hover:text-white rounded-lg uppercase tracking-widest transition-all">Del</button>
-                            </td>
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-slate-900 text-left">
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Farmer</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">District</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Joined</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {adminData.appUsers.length === 0 && (
+                            <tr><td colSpan={4} className="px-6 py-16 text-center text-slate-300 text-sm font-medium">No farmers registered yet</td></tr>
+                          )}
+                          {adminData.appUsers.map((u: any) => (
+                            <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-[11px] font-black text-emerald-700 shrink-0">
+                                    {u.name?.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-slate-900 text-sm">{u.name}</p>
+                                    <p className="text-slate-400 text-xs">{u.email}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md uppercase tracking-wide">
+                                  {u.district || 'Unknown'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-slate-400 text-xs font-medium">
+                                {format(new Date(u.created_at), 'dd MMM yyyy')}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button onClick={() => setEditingItem({ type: 'app-user', item: u })} className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Edit</button>
+                                  <button onClick={() => handleDelete('app-user', u.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Delete</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
 
               {activeTab === 'marketplace' && (
-                <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="">
-                    <div className="py-10 border-b border-slate-100 flex items-center justify-between mb-10">
-                      <h3 className="text-2xl font-black text-slate-950 flex items-center gap-4 uppercase tracking-tighter">
-                        <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
-                        Market Topology
-                      </h3>
-                      <div className="bg-slate-950 text-white px-6 py-2.5 rounded-full font-black text-[9px] uppercase tracking-[0.4em] border border-slate-800">{adminData.marketplaceUsers.length} MEMBERS</div>
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {/* Marketplace Users */}
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 mb-1">Market Participants</h3>
+                        <p className="text-slate-400 text-xs font-medium">{adminData.marketplaceUsers.length} registered traders</p>
+                      </div>
+                      <span className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full">{adminData.marketplaceUsers.length} Users</span>
                     </div>
-                    <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                      <table className="w-full border-collapse text-left">
+                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-slate-900 text-left">
+                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Participant</th>
+                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Role</th>
+                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">District</th>
+                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Subscription</th>
+                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {adminData.marketplaceUsers.length === 0 && (
+                              <tr><td colSpan={5} className="px-6 py-16 text-center text-slate-300 text-sm">No market participants yet</td></tr>
+                            )}
+                            {adminData.marketplaceUsers.map((u: any) => (
+                              <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                                      u.role === 'seller' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                      {u.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-slate-900 text-sm">{u.name}</p>
+                                      <p className="text-slate-400 text-xs">{u.email}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${
+                                    u.role === 'seller' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                                  }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                      u.role === 'seller' ? 'bg-emerald-500' : 'bg-blue-500'
+                                    }`} />
+                                    {u.role}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md uppercase tracking-wide">
+                                    {u.district || 'Unknown'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${
+                                    u.is_subscribed ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                  }`}>
+                                    {u.is_subscribed ? 'Active' : 'Unpaid'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <button onClick={() => setEditingItem({ type: 'marketplace-user', item: u })} className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Edit</button>
+                                    <button onClick={() => handleDelete('marketplace-user', u.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Delete</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'listings' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">Active Listings</h2>
+                      <p className="text-slate-400 text-xs font-medium">{adminData.listings.length} crop listings on the market</p>
+                    </div>
+                    <span className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full">{adminData.listings.length} Listings</span>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
                         <thead>
-                          <tr className="bg-slate-50 text-[0.65rem] font-bold uppercase text-slate-500 tracking-[0.2em]">
-                            <th className="px-8 py-4 border-b border-r border-slate-200">Participant Name</th>
-                            <th className="px-8 py-4 border-b border-r border-slate-200">Market Role</th>
-                            <th className="px-8 py-4 border-b border-r border-slate-200">Status</th>
-                            <th className="px-8 py-4 border-b border-slate-200 text-right">Actions</th>
+                          <tr className="bg-slate-900 text-left">
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Crop</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Seller</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Quantity</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Price / kg</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {adminData.marketplaceUsers.map((u: any) => (
-                            <tr key={u.id} className="hover:bg-slate-50 transition-all group">
-                              <td className="px-8 py-6 border-r border-slate-100">
-                                <p className="font-bold text-slate-900 text-sm">{u.name}</p>
-                              </td>
-                              <td className="px-8 py-6 border-r border-slate-100">
-                                <span className={`text-[10px] font-bold uppercase tracking-widest ${u.role === 'seller' ? 'text-emerald-500' : 'text-blue-500'}`}>{u.role}</span>
-                              </td>
-                              <td className="px-8 py-6 border-r border-slate-100">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active</span>
+                        <tbody className="divide-y divide-slate-50">
+                          {adminData.listings.length === 0 && <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-300 text-sm">No active listings</td></tr>}
+                          {adminData.listings.map((item: any) => (
+                            <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-slate-900">{item.crop}</td>
+                              <td className="px-6 py-4 text-slate-500 text-sm">{item.seller_name}</td>
+                              <td className="px-6 py-4 text-slate-600 text-sm">{item.quantity_kg} kg</td>
+                              <td className="px-6 py-4 font-bold text-slate-900 text-sm">{item.currency} {item.price_per_kg?.toLocaleString()}</td>
+                              <td className="px-6 py-4"><span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-md uppercase">{item.status}</span></td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button onClick={() => setEditingItem({ type: 'listing', item })} className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Edit</button>
+                                  <button onClick={() => handleDelete('listing', item.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Delete</button>
                                 </div>
-                              </td>
-                              <td className="px-8 py-6 text-right space-x-2">
-                                <button onClick={() => setEditingItem({ type: 'marketplace-user', item: u })} className="px-4 py-2 bg-slate-50 text-[10px] font-bold text-slate-400 hover:text-cyan-600 rounded-lg uppercase tracking-widest transition-all">Mod</button>
-                                <button onClick={() => handleDelete('marketplace-user', u.id)} className="px-4 py-2 bg-slate-50 text-[10px] font-bold text-slate-400 hover:text-red-500 rounded-lg uppercase tracking-widest transition-all">Del</button>
                               </td>
                             </tr>
                           ))}
@@ -438,58 +571,114 @@ export default function AdminDashboard() {
                       </table>
                     </div>
                   </div>
+                </div>
+              )}
 
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                    <MarketTable label="Active Listings" data={adminData.listings} type="listing" badge="SALE" col="emerald" onEdit={(i: any) => setEditingItem({ type: 'listing', item: i })} onDelete={(id: string) => handleDelete('listing', id)} />
-                    <MarketTable label="Buy Orders" data={adminData.orders} type="order" badge="BUY" col="blue" onEdit={(i: any) => setEditingItem({ type: 'order', item: i })} onDelete={(id: string) => handleDelete('order', id)} />
+              {activeTab === 'orders' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">Buy Orders</h2>
+                      <p className="text-slate-400 text-xs font-medium">{adminData.orders.length} open purchase requests</p>
+                    </div>
+                    <span className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full">{adminData.orders.length} Orders</span>
                   </div>
-
-                  {/* TRADES LOG */}
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <h3 className="text-base font-bold px-8 py-6 bg-slate-50 border-b border-slate-200 text-slate-950 uppercase tracking-widest">
-                      Transaction Vault
-                    </h3>
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
+                      <table className="w-full">
                         <thead>
-                          <tr className="bg-slate-100/50 text-[0.65rem] font-bold uppercase text-slate-500 tracking-[0.2em]">
-                            <th className="px-6 py-4 border-b border-r border-slate-200">Commodity</th>
-                            <th className="px-6 py-4 border-b border-r border-slate-200">Participants</th>
-                            <th className="px-6 py-4 border-b border-r border-slate-200">Economics</th>
-                            <th className="px-6 py-4 border-b border-slate-200 text-right">Status</th>
+                          <tr className="bg-slate-900 text-left">
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Crop</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Buyer</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Quantity</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Max Price / kg</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {adminData.trades.map((t: any) => (
-                            <tr key={t.id} className="hover:bg-slate-50 transition-all group">
-                              <td className="px-6 py-6 border-r border-slate-100">
-                                <p className="font-bold text-slate-950 uppercase tracking-tight text-[13px]">{t.crop}</p>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t.quantity_kg} KG Total</span>
-                              </td>
-                              <td className="px-6 py-6 border-r border-slate-100">
-                                <div className="space-y-1">
-                                  <div className="text-[10px] font-bold text-slate-600 uppercase tracking-tight flex items-center gap-2">
-                                    <div className="w-1 h-1 bg-emerald-500 rounded-full"></div> S: {t.seller_name}
-                                  </div>
-                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-2">
-                                    <div className="w-1 h-1 bg-blue-500 rounded-full"></div> B: {t.buyer_name}
-                                  </div>
+                        <tbody className="divide-y divide-slate-50">
+                          {adminData.orders.length === 0 && <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-300 text-sm">No buy orders yet</td></tr>}
+                          {adminData.orders.map((item: any) => (
+                            <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-slate-900">{item.crop}</td>
+                              <td className="px-6 py-4 text-slate-500 text-sm">{item.buyer_name}</td>
+                              <td className="px-6 py-4 text-slate-600 text-sm">{item.quantity_kg} kg</td>
+                              <td className="px-6 py-4 font-bold text-slate-900 text-sm">{item.currency} {item.max_price_per_kg?.toLocaleString()}</td>
+                              <td className="px-6 py-4"><span className={`px-2.5 py-1 text-[10px] font-bold rounded-md uppercase ${item.status === 'open' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>{item.status}</span></td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button onClick={() => setEditingItem({ type: 'order', item })} className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Edit</button>
+                                  <button onClick={() => handleDelete('order', item.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Delete</button>
                                 </div>
                               </td>
-                              <td className="px-6 py-6 border-r border-slate-100">
-                                <p className="text-sm font-black text-slate-900 tracking-tighter text-sm">UGX {t.total_value.toLocaleString()}</p>
-                                <span className="text-[9px] font-bold text-slate-400 lowercase italic">UGX {t.agreed_price_per_kg}/kg</span>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'trades' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">Transaction Ledger</h2>
+                      <p className="text-slate-400 text-xs font-medium">{adminData.trades.length} completed and pending trades</p>
+                    </div>
+                    <span className="px-4 py-2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full">{adminData.trades.length} Trades</span>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-slate-900 text-left">
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Commodity</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Seller</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Buyer</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Value</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {adminData.trades.length === 0 && <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-300 text-sm">No trades recorded yet</td></tr>}
+                          {adminData.trades.map((t: any) => (
+                            <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="px-6 py-4">
+                                <p className="font-semibold text-slate-900 text-sm uppercase">{t.crop}</p>
+                                <p className="text-slate-400 text-xs">{t.quantity_kg} kg</p>
                               </td>
-                              <td className="px-6 py-6 text-right">
-                                <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${t.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700">{t.seller_name?.charAt(0).toUpperCase()}</div>
+                                  <span className="text-sm text-slate-700">{t.seller_name}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-black text-blue-700">{t.buyer_name?.charAt(0).toUpperCase()}</div>
+                                  <span className="text-sm text-slate-700">{t.buyer_name}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <p className="font-bold text-slate-900 text-sm">UGX {t.total_value?.toLocaleString()}</p>
+                                <p className="text-slate-400 text-xs">{t.agreed_price_per_kg}/kg</p>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${t.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                   {t.status}
                                 </span>
                               </td>
+                              <td className="px-6 py-4 text-right">
+                                <button onClick={() => handleDelete('trade', t.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all">Delete</button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      {adminData.trades.length === 0 && <p className="text-center py-20 text-slate-300 font-bold italic uppercase tracking-widest text-[10px]">Vault Empty</p>}
                     </div>
                   </div>
                 </div>
@@ -506,9 +695,9 @@ export default function AdminDashboard() {
 
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl relative shrink-0 overflow-hidden"
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl relative shrink-0 overflow-y-auto max-h-[90vh]"
             >
-              <div className="p-8 sm:p-10 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="p-8 sm:p-10 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-4">
                   <div className="px-5 py-2 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">MOD</div>
                   <div>
@@ -516,28 +705,43 @@ export default function AdminDashboard() {
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">{editingItem.type.replace('-', ' ')}</p>
                   </div>
                 </div>
-                <button onClick={() => setEditingItem(null)} className="px-5 py-2 bg-white text-[10px] font-black text-slate-400 hover:text-slate-950 uppercase tracking-widest border border-slate-200 rounded-2xl transition-all">Close</button>
+                <button onClick={() => setEditingItem(null)} className="px-5 py-2 bg-white text-[10px] font-black text-slate-400 hover:text-slate-950 uppercase tracking-widest rounded-2xl transition-all shadow-sm">Close</button>
               </div>
 
-              <form onSubmit={handleUpdate} className="p-8 sm:p-10 space-y-6">
+              <form onSubmit={handleUpdate} className="p-8 sm:p-10 space-y-6" autoComplete="off">
                 {editingItem.type.includes('user') && (
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">Display Name</label>
-                      <input type="text" value={editingItem.item.name} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, name: e.target.value } })}
-                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900" />
+                      <input type="text" autoComplete="off" value={editingItem.item.name} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, name: e.target.value } })}
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900 shadow-sm" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">Primary Email</label>
-                      <input type="email" value={editingItem.item.email} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, email: e.target.value } })}
+                      <input type="email" autoComplete="off" value={editingItem.item.email} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, email: e.target.value } })}
                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">{editingItem.type === 'app-user' ? 'Registered Location' : 'Market District'}</label>
-                      <input type="text" value={editingItem.type === 'app-user' ? (editingItem.item.location || '') : (editingItem.item.district || '')}
-                        onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, [editingItem.type === 'app-user' ? 'location' : 'district']: e.target.value } })}
+                      <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">District / Location</label>
+                      <input type="text" autoComplete="off" value={editingItem.item.district || ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, district: e.target.value } })}
                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900" />
                     </div>
+                    {editingItem.type === 'marketplace-user' && (
+                      <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div>
+                          <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Subscription Paid</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Authorize access to market features</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setEditingItem({ ...editingItem, item: { ...editingItem.item, is_subscribed: editingItem.item.is_subscribed ? 0 : 1 } })}
+                          className={`w-14 h-8 rounded-full relative transition-all ${editingItem.item.is_subscribed ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                        >
+                          <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${editingItem.item.is_subscribed ? 'left-7' : 'left-1'}`} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -545,18 +749,18 @@ export default function AdminDashboard() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">Product Description</label>
-                      <input type="text" value={editingItem.item.crop} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, crop: e.target.value } })}
+                      <input type="text" autoComplete="off" value={editingItem.item.crop} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, crop: e.target.value } })}
                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">Stock (kg)</label>
-                        <input type="number" value={editingItem.item.quantity_kg} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, quantity_kg: e.target.value } })}
+                        <input type="number" autoComplete="off" value={editingItem.item.quantity_kg} onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, quantity_kg: e.target.value } })}
                           className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest px-1">{editingItem.type === 'listing' ? 'UGX / kg' : 'Max UGX / kg'}</label>
-                        <input type="number" value={editingItem.type === 'listing' ? editingItem.item.price_per_kg : editingItem.item.max_price_per_kg}
+                        <input type="number" autoComplete="off" value={editingItem.type === 'listing' ? editingItem.item.price_per_kg : editingItem.item.max_price_per_kg}
                           onChange={(e) => setEditingItem({ ...editingItem, item: { ...editingItem.item, [editingItem.type === 'listing' ? 'price_per_kg' : 'max_price_per_kg']: e.target.value } })}
                           className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-slate-900" />
                       </div>
@@ -597,7 +801,7 @@ function StatCard({ label, val, grow, type, color }: any) {
     red: 'text-[#FF4757]'
   }
   return (
-    <div className={`bg-white rounded-[1.5rem] shadow-sm border-t-4 ${borderColors[color] || 'border-slate-200'} p-8 relative overflow-hidden flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow`}>
+    <div className={`bg-white rounded-[1.5rem] shadow-sm p-8 relative overflow-hidden flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow`}>
       <div className="flex items-start justify-between">
         <p className={`text-4xl font-extrabold ${textColors[color] || 'text-[#1A1C1E]'} tracking-tight`}>{val}</p>
         <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${color === 'amber' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
@@ -624,43 +828,44 @@ function PulseItem({ label, val, type }: any) {
 }
 
 function MarketTable({ label, data, type, badge, col, onEdit, onDelete }: any) {
-  const color = col === 'emerald' ? 'text-emerald-500' : 'text-cyan-500';
+  const accentColor = col === 'emerald' ? 'bg-emerald-600' : 'bg-blue-600';
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="px-6 py-6 flex items-center justify-between bg-slate-50 border-b border-slate-200">
-        <h4 className="font-bold text-slate-950 flex items-center gap-3 uppercase tracking-widest text-[11px]">
-          <div className={`w-1.5 h-4 bg-current rounded-full ${color}`}></div>
-          {label}
-        </h4>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{data.length} Total</span>
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
+      <div className="px-6 py-5 flex items-center justify-between bg-slate-900">
+        <h4 className="font-black text-white uppercase tracking-widest text-[11px]">{label}</h4>
+        <span className={`px-3 py-1 ${accentColor} text-white text-[9px] font-black uppercase tracking-widest rounded-full`}>{data.length} Total</span>
       </div>
-      <div className="flex-1 overflow-y-auto max-h-[500px] scrollbar-hide">
-        <table className="w-full text-left border-collapse">
+      <div className="flex-1 overflow-y-auto max-h-[400px]">
+        <table className="w-full text-left">
           <thead>
-            <tr className="bg-slate-100/50 text-[0.65rem] font-black uppercase text-slate-400 tracking-widest">
-              <th className="px-6 py-3 border-b border-r border-slate-200">Commodity</th>
-              <th className="px-6 py-3 border-b border-r border-slate-200">Volume</th>
-              <th className="px-6 py-3 border-b border-slate-200 text-right">Actions</th>
+            <tr className="bg-slate-50 text-left">
+              <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Crop</th>
+              <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Qty</th>
+              <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Price/kg</th>
+              <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-50">
             {data.map((item: any) => (
-              <tr key={item.id} className="group hover:bg-slate-50 transition-all">
-                <td className="px-6 py-4 border-r border-slate-100">
-                  <div className="font-bold text-slate-950 uppercase tracking-tight text-[12px]">{item.crop}</div>
-                  <p className="text-[9px] font-bold text-slate-400 lowercase mt-0.5">{item.seller_name || item.buyer_name}</p>
+              <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                <td className="px-5 py-3.5">
+                  <div className="font-semibold text-slate-900 text-sm">{item.crop}</div>
+                  <p className="text-slate-400 text-xs">{item.seller_name || item.buyer_name}</p>
                 </td>
-                <td className="px-6 py-4 border-r border-slate-100 font-bold text-slate-700 text-sm tracking-tighter">{item.quantity_kg}kg</td>
-                <td className="px-6 py-4 text-right space-x-2">
-                  <button onClick={() => onEdit(item)} className="px-3 py-1 bg-slate-50 text-[9px] font-bold text-slate-400 hover:text-cyan-600 rounded-lg transition-all opacity-0 group-hover:opacity-100 uppercase tracking-widest">Mod</button>
-                  <button onClick={() => onDelete(item.id)} className="px-3 py-1 bg-slate-50 text-[9px] font-bold text-slate-400 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100 uppercase tracking-widest">Del</button>
+                <td className="px-5 py-3.5 text-slate-600 text-sm font-medium">{item.quantity_kg} kg</td>
+                <td className="px-5 py-3.5 text-slate-600 text-sm font-medium">
+                  {item.price_per_kg || item.max_price_per_kg}
+                </td>
+                <td className="px-5 py-3.5 text-right">
+                  <div className="flex justify-end gap-1.5">
+                    <button onClick={() => onEdit(item)} className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white text-[10px] font-bold rounded-lg transition-all uppercase tracking-wider">Edit</button>
+                    <button onClick={() => onDelete(item.id)} className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-lg transition-all uppercase tracking-wider">Del</button>
+                  </div>
                 </td>
               </tr>
             ))}
             {data.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-6 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">No Data</td>
-              </tr>
+              <tr><td colSpan={4} className="px-5 py-12 text-center text-slate-300 text-sm">No data</td></tr>
             )}
           </tbody>
         </table>

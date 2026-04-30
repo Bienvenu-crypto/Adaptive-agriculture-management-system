@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const userId = crypto.randomUUID();
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
 
     db.prepare('INSERT INTO users (id, email, password_hash, name, district) VALUES (?, ?, ?, ?, ?)').run(
       userId,

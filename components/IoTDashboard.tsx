@@ -167,7 +167,7 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
 
   if (!isMounted || (isLoading && data.length === 0)) {
     return (
-      <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm min-h-[400px] flex items-center justify-center">
+      <div className="bg-white p-6 rounded-2xl shadow-sm min-h-[400px] flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
       </div>
     );
@@ -177,15 +177,15 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
   const moistureWarning = current.moisture < 30 || current.moisture > 75;
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm relative overflow-hidden">
+    <div className="bg-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase leading-none">
               Field Node
             </h2>
-            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-              isSimulating ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+              isSimulating ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'
             }`}>
               <div className={`w-1.5 h-1.5 rounded-full ${isSimulating ? 'bg-orange-500' : 'bg-emerald-500 animate-pulse'}`} />
               {isSimulating ? 'Simulation' : 'AI Detected'}
@@ -208,7 +208,7 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
           
           <button
             onClick={() => setShowManualForm(true)}
-            className="flex items-center justify-center p-2.5 bg-white border border-black/5 text-slate-600 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
+            className="flex items-center justify-center p-2.5 bg-white text-slate-600 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
             title="Manual Entry"
           >
             <Plus size={18} />
@@ -217,7 +217,7 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 relative z-10">
-        <motion.div whileHover={{ y: -2 }} className={`p-6 rounded-[2rem] border ${moistureWarning ? 'bg-red-50/50 border-red-100' : 'bg-blue-50/50 border-blue-100'}`}>
+        <motion.div whileHover={{ y: -2 }} className={`p-6 rounded-[2rem] shadow-sm ${moistureWarning ? 'bg-red-50/50' : 'bg-blue-50/50'}`}>
           <div className="flex items-center justify-between mb-4">
              <div className={`p-2 rounded-xl ${moistureWarning ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
                <Droplets size={16} />
@@ -230,7 +230,7 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
           </div>
         </motion.div>
 
-        <motion.div whileHover={{ y: -2 }} className="p-6 rounded-[2rem] bg-orange-50/50 border border-orange-100">
+        <motion.div whileHover={{ y: -2 }} className="p-6 rounded-[2rem] bg-orange-50/50 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 rounded-xl bg-orange-100 text-orange-600">
               <Thermometer size={16} />
@@ -243,7 +243,7 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
           </div>
         </motion.div>
 
-        <motion.div whileHover={{ y: -2 }} className="p-6 rounded-[2rem] bg-emerald-50/50 border border-emerald-100">
+        <motion.div whileHover={{ y: -2 }} className="p-6 rounded-[2rem] bg-emerald-50/50 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
               <FlaskConical size={16} />
@@ -263,7 +263,7 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
             <CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} />
             <XAxis dataKey="time" stroke="#cbd5e1" fontSize={9} tickMargin={12} axisLine={false} tickLine={false} />
             <YAxis stroke="#cbd5e1" fontSize={9} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+            <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
             <Line type="monotone" dataKey="moisture" stroke="#3b82f6" strokeWidth={4} dot={false} strokeLinecap="round" />
             <Line type="monotone" dataKey="temperature" stroke="#f97316" strokeWidth={4} dot={false} strokeLinecap="round" />
           </LineChart>
@@ -274,15 +274,15 @@ export default function IoTDashboard({ location }: IoTDashboardProps) {
       <AnimatePresence>
         {showManualForm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl border border-black/5 p-8">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl p-8">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Manual Log</h3>
                 <button onClick={() => setShowManualForm(false)} className="text-slate-400 hover:text-slate-900"><X size={20} /></button>
               </div>
-              <form onSubmit={handleManualSubmit} className="space-y-4">
-                <input type="number" required value={manualData.moisture} onChange={e => setManualData({...manualData, moisture: e.target.value})} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-5 py-4 text-sm font-bold placeholder:text-slate-300" placeholder="Soil Moisture (%)" />
-                <input type="number" required value={manualData.temperature} onChange={e => setManualData({...manualData, temperature: e.target.value})} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-5 py-4 text-sm font-bold placeholder:text-slate-300" placeholder="Temperature (°C)" />
-                <input type="number" step="0.1" required value={manualData.ph} onChange={e => setManualData({...manualData, ph: e.target.value})} className="w-full bg-slate-50 border border-black/5 rounded-2xl px-5 py-4 text-sm font-bold placeholder:text-slate-300" placeholder="Soil pH" />
+              <form onSubmit={handleManualSubmit} className="space-y-4" autoComplete="off">
+                <input type="number" required autoComplete="off" value={manualData.moisture} onChange={e => setManualData({...manualData, moisture: e.target.value})} className="w-full bg-slate-50 rounded-2xl px-5 py-4 text-sm font-bold placeholder:text-slate-300" placeholder="Soil Moisture (%)" />
+                <input type="number" required autoComplete="off" value={manualData.temperature} onChange={e => setManualData({...manualData, temperature: e.target.value})} className="w-full bg-slate-50 rounded-2xl px-5 py-4 text-sm font-bold placeholder:text-slate-300" placeholder="Temperature (°C)" />
+                <input type="number" step="0.1" required autoComplete="off" value={manualData.ph} onChange={e => setManualData({...manualData, ph: e.target.value})} className="w-full bg-slate-50 rounded-2xl px-5 py-4 text-sm font-bold placeholder:text-slate-300" placeholder="Soil pH" />
                 <button type="submit" className="w-full bg-slate-900 text-white rounded-2xl py-4 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all">Save Environmental Record</button>
               </form>
             </motion.div>

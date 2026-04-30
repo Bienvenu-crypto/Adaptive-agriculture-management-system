@@ -74,7 +74,7 @@ export default function ResourceLibrary() {
 
   return (
     <>
-      <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm">
+      <div className="bg-white p-6 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-black text-slate-900 uppercase tracking-tighter text-lg">
             Knowledge Vault
@@ -94,7 +94,7 @@ export default function ResourceLibrary() {
             <button
               key={index}
               onClick={() => setSelectedResource(resource)}
-              className="cursor-pointer w-full text-left group flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100"
+              className="cursor-pointer w-full text-left group flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors"
             >
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 font-black text-[9px] uppercase tracking-tighter ${resource.bg} ${resource.color}`}>
                 {resource.type}
@@ -133,7 +133,7 @@ export default function ResourceLibrary() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-4 border-b border-black/5 bg-white z-10">
+              <div className="flex items-center justify-between p-4 bg-white z-10 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-black text-[9px] uppercase tracking-tighter ${selectedResource.bg} ${selectedResource.color}`}>
                     {selectedResource.type}
@@ -153,7 +153,7 @@ export default function ResourceLibrary() {
 
               <div className="flex-1 overflow-y-auto p-6 bg-slate-50 relative min-h-[300px] md:min-h-[400px]">
                 {selectedResource.type === 'Video' ? (
-                  <div className="aspect-video w-full rounded-xl overflow-hidden shadow-sm border border-black/5">
+                  <div className="aspect-video w-full rounded-xl overflow-hidden shadow-sm">
                     <iframe
                       src={selectedResource.content}
                       className="w-full h-full"
@@ -162,7 +162,7 @@ export default function ResourceLibrary() {
                     />
                   </div>
                 ) : (
-                  <div className="prose prose-slate prose-emerald max-w-none bg-white p-6 rounded-xl shadow-sm border border-black/5">
+                  <div className="prose prose-slate prose-emerald max-w-none bg-white p-6 rounded-xl shadow-sm">
                     <Markdown>{selectedResource.content}</Markdown>
                   </div>
                 )}

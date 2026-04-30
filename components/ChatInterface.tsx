@@ -233,9 +233,9 @@ export default function ChatInterface({ location }: LocationProps) {
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden">
+    <div className="flex flex-col h-[600px] bg-white rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-black/5 bg-emerald-50 flex items-center justify-between">
+      <div className="p-4 bg-emerald-50 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[10px] font-black tracking-widest">
             AI
@@ -249,7 +249,7 @@ export default function ChatInterface({ location }: LocationProps) {
           <select 
             value={selectedLang}
             onChange={(e) => handleLangChange(e.target.value)}
-            className="px-2 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors cursor-pointer outline-none"
+            className="px-2 py-1.5 bg-white text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors cursor-pointer outline-none"
           >
             {languages.map(lang => (
               <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -262,7 +262,7 @@ export default function ChatInterface({ location }: LocationProps) {
                   setShowHistory(!showHistory);
                   if (!showHistory) fetchHistory();
                 }}
-                className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors"
+                className="px-3 py-1.5 bg-white text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors"
               >
                 {showHistory ? 'Close History' : 'History'}
               </button>
@@ -293,7 +293,7 @@ export default function ChatInterface({ location }: LocationProps) {
                 <div
                   className={`max-w-[80%] p-3 rounded-2xl ${m.role === 'user'
                     ? 'bg-emerald-600 text-white rounded-tr-none'
-                    : 'bg-white border border-black/5 text-gray-800 rounded-tl-none shadow-sm'
+                    : 'bg-white text-gray-800 rounded-tl-none shadow-sm'
                     }`}
                 >
                   {m.image && (
@@ -326,7 +326,7 @@ export default function ChatInterface({ location }: LocationProps) {
               exit={{ x: '100%' }}
               className="absolute inset-0 bg-white z-20 flex flex-col"
             >
-              <div className="p-4 border-b border-black/5 bg-gray-50 flex items-center justify-between">
+              <div className="p-4 bg-gray-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-widest text-emerald-900">Chat History</h3>
                 <button
                   onClick={() => {
@@ -353,7 +353,7 @@ export default function ChatInterface({ location }: LocationProps) {
                     <button
                       key={session.session_id}
                       onClick={() => loadSession(session.session_id)}
-                      className="w-full text-left p-4 rounded-xl border border-black/5 bg-gray-50/50 hover:bg-emerald-50 transition-colors group"
+                      className="w-full text-left p-4 rounded-xl bg-gray-50/50 hover:bg-emerald-50 transition-colors group shadow-sm"
                     >
                       <div className="flex justify-between items-start mb-1">
                         <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
@@ -374,7 +374,7 @@ export default function ChatInterface({ location }: LocationProps) {
         {/* Loading Overlay */}
         {isLoading && (
           <div className="absolute bottom-24 left-4 z-10">
-            <div className="bg-white border border-black/5 p-3 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
+            <div className="bg-white p-3 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
               <span className="text-xs text-emerald-600 animate-pulse font-black">---</span>
               <span className="text-xs text-gray-400">Thinking...</span>
             </div>
@@ -383,7 +383,7 @@ export default function ChatInterface({ location }: LocationProps) {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-white border-t border-black/5">
+      <div className="p-4 bg-white">
         {selectedImage && (
           <div className="mb-2 relative inline-block">
             <div className="relative w-20 h-20">
@@ -391,7 +391,7 @@ export default function ChatInterface({ location }: LocationProps) {
                 src={selectedImage}
                 alt="Preview"
                 fill
-                className="object-cover rounded-lg border border-emerald-200"
+                className="object-cover rounded-lg"
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -420,6 +420,7 @@ export default function ChatInterface({ location }: LocationProps) {
           <input
             type="text"
             value={input}
+            autoComplete="off"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask about your crops..."

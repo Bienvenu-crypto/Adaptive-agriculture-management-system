@@ -117,7 +117,7 @@ export default function MarketPrices() {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm min-h-[400px] flex flex-col items-center justify-center">
+      <div className="bg-white p-6 rounded-2xl shadow-sm min-h-[400px] flex flex-col items-center justify-center">
         <p className="text-indigo-600 font-black uppercase tracking-[0.2em] animate-pulse">Scanning Markets...</p>
       </div>
     );
@@ -125,7 +125,7 @@ export default function MarketPrices() {
 
   if (error) {
     return (
-      <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm min-h-[400px] flex flex-col items-center justify-center text-center">
+      <div className="bg-white p-6 rounded-2xl shadow-sm min-h-[400px] flex flex-col items-center justify-center text-center">
         <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">Feed Interrupted</h3>
         <p className="text-slate-500 font-bold max-w-sm mb-6 uppercase text-[10px] tracking-widest">{error}</p>
       </div>
@@ -135,7 +135,7 @@ export default function MarketPrices() {
   const currentCropData = marketData.find(c => c.crop === selectedCrop);
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm">
+    <div className="bg-white p-6 rounded-2xl shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h2 className="font-black text-slate-900 uppercase tracking-tighter text-lg">
@@ -150,13 +150,14 @@ export default function MarketPrices() {
         <span className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em]">UNITS / KG</span>
       </div>
 
-      <form onSubmit={handleSearch} className="mb-6 relative">
+      <form onSubmit={handleSearch} className="mb-6 relative" autoComplete="off">
         <input
           type="text"
           value={searchQuery}
+          autoComplete="off"
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="ENTER CROP NAME..."
-          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-bold uppercase placeholder:tracking-widest"
+          className="w-full px-4 py-3 bg-slate-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-bold uppercase placeholder:tracking-widest"
           disabled={isSearching}
         />
         <button
@@ -176,9 +177,9 @@ export default function MarketPrices() {
               setSelectedCrop(item.crop);
               sendGAEvent({ event: 'market_trend_view', value: item.crop });
             }}
-            className={`flex items-center justify-between p-3 rounded-xl transition-colors border cursor-pointer ${selectedCrop === item.crop
-                ? 'bg-indigo-50 border-indigo-100'
-                : 'border-transparent hover:bg-slate-50 hover:border-black/5'
+            className={`flex items-center justify-between p-3 rounded-xl transition-colors cursor-pointer ${selectedCrop === item.crop
+                ? 'bg-indigo-50 shadow-sm'
+                : 'hover:bg-slate-50'
               }`}
           >
             <div className="flex items-center gap-3">

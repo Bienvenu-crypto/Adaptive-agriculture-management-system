@@ -77,7 +77,7 @@ export default function NotificationBell() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer px-5 py-2.5 flex items-center gap-3 hover:bg-slate-50 transition-all rounded-full border border-transparent hover:border-slate-100 group"
+        className="cursor-pointer px-5 py-2.5 flex items-center gap-3 hover:bg-slate-50 transition-all rounded-full group"
       >
         <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em]">Notify</span>
         {unreadCount > 0 && (
@@ -93,9 +93,9 @@ export default function NotificationBell() {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-3 w-80 max-h-[80vh] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-[100] flex flex-col pointer-events-auto"
+            className="absolute right-0 mt-3 w-80 max-h-[80vh] bg-white rounded-3xl shadow-2xl overflow-hidden z-[100] flex flex-col pointer-events-auto"
           >
-            <div className="p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+            <div className="p-5 bg-slate-50/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-slate-900 text-sm tracking-tight">Notifications</h3>
               </div>
@@ -142,7 +142,7 @@ export default function NotificationBell() {
               )}
             </div>
 
-            <div className="p-4 bg-slate-50/50 border-t border-slate-50 text-center">
+            <div className="p-4 bg-slate-50/50 text-center">
               <button className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 View Full Inbox
               </button>

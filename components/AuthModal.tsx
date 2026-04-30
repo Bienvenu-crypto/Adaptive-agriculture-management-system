@@ -78,7 +78,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
+          className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[90vh]"
         >
           <button
             onClick={onClose}
@@ -101,7 +101,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               {isLogin ? 'Access your agricultural intelligence data' : 'Begin your journey with state-of-the-art management'}
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               {!isLogin && (
                 <>
                   <div>
@@ -109,9 +109,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     <input
                       type="text"
                       required
+                      autoComplete="off"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-slate-50 px-4 py-3 rounded-2xl border border-black/5 focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300"
+                      className="w-full bg-slate-50 px-4 py-3 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300 shadow-sm"
                       placeholder="JOHN DOE"
                     />
                   </div>
@@ -120,9 +121,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     <input
                       type="text"
                       required
+                      autoComplete="off"
                       value={formData.district}
                       onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                      className="w-full bg-slate-50 px-4 py-3 rounded-2xl border border-black/5 focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300"
+                      className="w-full bg-slate-50 px-4 py-3 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300 shadow-sm"
                       placeholder="E.G. WAKISO"
                     />
                   </div>
@@ -134,6 +136,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 <input
                   type="email"
                   required
+                  autoComplete="off"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-slate-50 px-4 py-3 rounded-2xl border border-black/5 focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300"
@@ -146,6 +149,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 <input
                   type="password"
                   required
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full bg-slate-50 px-4 py-3 rounded-2xl border border-black/5 focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300"
@@ -154,7 +158,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-xl border border-red-100">
+                <div className="p-3 bg-red-50 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-xl">
                   {error}
                 </div>
               )}

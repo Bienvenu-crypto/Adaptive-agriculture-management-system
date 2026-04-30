@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const userId = crypto.randomUUID();
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
 
     db.prepare(
       'INSERT INTO marketplace_users (id, name, email, phone, district, role, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     );
 
     const response = NextResponse.json({
-      user: { id: userId, name, email, phone: phone || null, district, role },
+      user: { id: userId, name, email, phone: phone || null, district, role, is_subscribed: 0 },
     });
     response.cookies.set('mp_session', sessionId, {
       httpOnly: true,

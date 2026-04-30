@@ -13,6 +13,7 @@ import CropRecommendation from '@/components/CropRecommendation';
 import SmartCropCalendar from '@/components/SmartCropCalendar';
 import ResourceLibrary from '@/components/ResourceLibrary';
 import NotificationBell from '@/components/NotificationBell';
+import AboutPage from '@/components/AboutPage';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -27,9 +28,14 @@ export default function Page() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
-  const [activeView, setActiveView] = useState<string>(user ? 'iot' : 'chat');
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [activeView, setActiveView] = useState<string>('about');
   const [location, setLocation] = useState<LocationState | null>(null);
+
+  // Sub-menu states
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    advisory: true,
+    crops: true
+  });
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -63,6 +69,10 @@ export default function Page() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const toggleMenu = (menuId: string) => {
+    setExpandedMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
+  };
+
   const openAuthModal = (mode: 'login' | 'signup') => {
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
@@ -78,103 +88,138 @@ export default function Page() {
       />
 
       {/* Desktop Sidebar */}
-      <nav className="fixed left-0 top-0 bottom-0 w-72 bg-[#0B1223] border-r border-white/5 p-8 hidden lg:flex flex-col z-50 overflow-y-auto">
+      <nav className="fixed left-0 top-0 bottom-0 w-72 bg-[#0B1223] p-8 hidden lg:flex flex-col z-50 overflow-y-auto custom-scrollbar shadow-2xl">
         <div
           className="flex flex-col mb-12 cursor-pointer"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => switchView('about')}
         >
           <span className="text-[1.3rem] font-bold text-white leading-[1.2] tracking-tight">Adaptive Agriculture</span>
           <span className="text-[1.3rem] font-bold text-emerald-400 leading-[1.2] tracking-tight">Management System</span>
         </div>
 
-        <div className="flex-1 space-y-2 mt-4">
+        <div className="flex-1 space-y-4">
           <button
-            onClick={() => switchView('chat')}
-            className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'chat'
-              ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-              : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+            onClick={() => switchView('about')}
+            className={`w-full text-left px-6 py-4 rounded-2xl text-[14px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'about'
+              ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30'
+              : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white'
               }`}
           >
-            Advisory
+            About
           </button>
+
+          {/* Advisory Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => toggleMenu('advisory')}
+              className="w-full text-left px-6 py-2 text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between hover:text-slate-300"
+            >
+              Advisory
+              <span>{expandedMenus.advisory ? '−' : '+'}</span>
+            </button>
+            {expandedMenus.advisory && (
+              <div className="space-y-1 pl-4">
+                <button
+                  onClick={() => switchView('chatbot')}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'chatbot' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Chatbot
+                </button>
+                {user && (
+                  <>
+                    <button
+                      onClick={() => switchView('recommendation')}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'recommendation' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Crop Recommendation
+                    </button>
+                    <button
+                      onClick={() => switchView('calendar')}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'calendar' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Smart Crop Calendar
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {user && (
             <>
-              <button
-                onClick={() => switchView('iot')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'iot'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                  }`}
-              >
-                Metrics
-              </button>
+              {/* Crops Menu */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => toggleMenu('crops')}
+                  className="w-full text-left px-6 py-2 text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between hover:text-slate-300"
+                >
+                  Crops
+                  <span>{expandedMenus.crops ? '−' : '+'}</span>
+                </button>
+                {expandedMenus.crops && (
+                  <div className="space-y-1 pl-4">
+                    <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
+                    <button
+                      onClick={() => switchView('orders')}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Orders
+                    </button>
+                    <button
+                      onClick={() => switchView('listings')}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'listings' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Listings
+                    </button>
+                    
+                    <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
+                    <button
+                      onClick={() => switchView('prices')}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'prices' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Prices
+                    </button>
+                    <button
+                      onClick={() => switchView('advertising')}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Advertising
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={() => switchView('weather')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
+                className={`w-full text-left px-6 py-4 rounded-2xl text-[14px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather'
+                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30'
+                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white'
                   }`}
               >
                 Weather
               </button>
-
-              <button
-                onClick={() => switchView('recommendation')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'recommendation'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                  }`}
-              >
-                Crops
-              </button>
-              <button
-                onClick={() => switchView('calendar')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'calendar'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                  }`}
-              >
-                Calendar
-              </button>
-
-              <button
-                onClick={() => switchView('market')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'market'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                  }`}
-              >
-                Market
-              </button>
-              <button
-                onClick={() => switchView('marketplace')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'marketplace'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                  }`}
-              >
-                Trade
-              </button>
-              <button
-                onClick={() => switchView('resources')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[15px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'resources'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 translate-x-2'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white hover:translate-x-1'
-                  }`}
-              >
-                Library
-              </button>
-
             </>
+          )}
+
+
+          {user && (
+            <button
+              onClick={() => switchView('iot')}
+              className={`w-full text-left px-6 py-4 rounded-2xl text-[14px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'iot'
+                ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30'
+                : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white'
+                }`}
+            >
+              Field Metrics
+            </button>
           )}
         </div>
 
         {!user && (
-          <div className="mt-auto pt-8 border-t border-white/5 space-y-3">
+          <div className="mt-auto pt-8 space-y-3">
             <button
               onClick={() => openAuthModal('login')}
-              className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 w-full hover:bg-white/10"
+              className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 w-full hover:bg-white/10"
             >
               Sign In
             </button>
@@ -189,7 +234,7 @@ export default function Page() {
       </nav>
 
       {/* Desktop Top Header */}
-      <div className="hidden lg:flex fixed top-0 right-0 left-72 h-24 items-center justify-between px-12 z-40 bg-[#F8F9FA]/50 backdrop-blur-md border-b border-black/5">
+      <div className="hidden lg:flex fixed top-0 right-0 left-72 h-24 items-center justify-between px-12 z-40 bg-[#F8F9FA]/50 backdrop-blur-md">
         <h1 className="flex flex-col leading-none">
           <span className="text-3xl font-black text-emerald-950 tracking-tighter">
             Smart Farming <span className="text-emerald-600">Intelligence</span>
@@ -197,8 +242,8 @@ export default function Page() {
         </h1>
         {user && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4 py-1.5 px-4 rounded-full border border-black/5 bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-xs border-2 border-white shadow-sm shrink-0">
+            <div className="flex items-center gap-4 py-1.5 px-4 rounded-full bg-white/50 backdrop-blur-sm shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-xs shadow-sm shrink-0">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col pr-2">
@@ -214,7 +259,7 @@ export default function Page() {
               >
                 Sign Out
               </button>
-              <div className="bg-white shadow-sm hover:shadow-md transition-shadow p-1.5 rounded-full border border-black/5">
+              <div className="bg-white shadow-sm hover:shadow-md transition-shadow p-1.5 rounded-full">
                 <NotificationBell />
               </div>
             </div>
@@ -223,9 +268,9 @@ export default function Page() {
       </div>
 
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/5 px-6 py-4">
+      <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex flex-col" onClick={() => switchView(user ? 'iot' : 'chat')}>
+          <div className="flex flex-col" onClick={() => switchView('about')}>
             <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Adaptive Agriculture</span>
             <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Management System</span>
           </div>
@@ -249,44 +294,32 @@ export default function Page() {
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 overflow-hidden"
             >
-              <div className="flex flex-col gap-2 py-4 border-t border-black/5">
-                {!user ? (
+              <div className="flex flex-col gap-2 py-4">
+                <button onClick={() => switchView('about')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black ${activeView === 'about' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>About</button>
+                <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Advisory</div>
+                <button onClick={() => switchView('chatbot')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'chatbot' ? 'text-emerald-600' : ''}`}>Chatbot</button>
+                {user && (
                   <>
-                    <button
-                      onClick={() => switchView('chat')}
-                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeView === 'chat' ? 'bg-emerald-600 text-white' : 'text-emerald-700 bg-emerald-50'
-                        }`}
-                    >
-                      Advisory
-                    </button>
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      <button onClick={() => openAuthModal('login')} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50 border border-slate-100">Sign In</button>
-                      <button onClick={() => openAuthModal('signup')} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600">Register</button>
-                    </div>
+                    <button onClick={() => switchView('recommendation')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'recommendation' ? 'text-emerald-600' : ''}`}>Recommendation</button>
+                    <button onClick={() => switchView('calendar')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'calendar' ? 'text-emerald-600' : ''}`}>Calendar</button>
+                    
+                    <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crops</div>
+                    <button onClick={() => switchView('orders')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'orders' ? 'text-emerald-600' : ''}`}>Orders</button>
+                    <button onClick={() => switchView('listings')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'listings' ? 'text-emerald-600' : ''}`}>Listings</button>
+                    <button onClick={() => switchView('prices')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'prices' ? 'text-emerald-600' : ''}`}>Prices</button>
+                    <button onClick={() => switchView('advertising')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'advertising' ? 'text-emerald-600' : ''}`}>Advertising</button>
+                    
+                    <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black mt-2 ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>Weather</button>
                   </>
+                )}
+                
+                {user ? (
+                  <button onClick={() => logout()} className="px-5 py-3 text-sm font-black text-red-600 uppercase tracking-widest mt-4">Sign Out</button>
                 ) : (
-                  <>
-                    <div className="flex items-center gap-4 p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-lg border-2 border-white shadow-sm">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="text-base font-black text-emerald-950 leading-none tracking-tight">{user.name}</p>
-                        <p className="text-xs font-bold text-emerald-950 mt-1 lowercase">{user.email}</p>
-                      </div>
-                    </div>
-                    <button onClick={() => switchView('chat')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'chat' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Advisory</button>
-                    <button onClick={() => switchView('iot')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'iot' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Metrics</button>
-                    <button onClick={() => switchView('recommendation')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'recommendation' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Crops</button>
-                    <button onClick={() => switchView('calendar')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'calendar' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Calendar</button>
-                    <button onClick={() => switchView('market')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'market' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Market</button>
-                    <button onClick={() => switchView('marketplace')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'marketplace' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Exchange</button>
-                    <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'weather' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Weather</button>
-                    <button onClick={() => switchView('resources')} className={`w-full text-left px-5 py-4 rounded-2xl text-base font-black transition-all ${activeView === 'resources' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>Library</button>
-                    <button onClick={() => logout()} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 mt-4 opacity-70">
-                      Sign Out
-                    </button>
-                  </>
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <button onClick={() => openAuthModal('login')} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-50">Sign In</button>
+                    <button onClick={() => openAuthModal('signup')} className="px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-emerald-600">Register</button>
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -303,74 +336,15 @@ export default function Page() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {activeView === 'chat' && (
+            {activeView === 'about' && <AboutPage />}
+            
+            {activeView === 'chatbot' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    AI Farm Advisory
-                  </h2>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">AI Farm Advisory</h2>
                   <p className="text-slate-500 text-lg">Real-time expert guidance for your agricultural journey.</p>
                 </div>
                 <ChatInterface location={location} />
-                {!user && (
-                  <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl mt-12">
-                    <div className="relative z-10 max-w-2xl px-4">
-                      <h3 className="text-3xl font-black mb-4">Unlock Your Full Potential</h3>
-                      <p className="text-slate-400 mb-8 text-lg leading-relaxed">
-                        Sign up to access real-time soil sensors, localized market price trends, and our secure trade platform for farmers.
-                      </p>
-                      <button
-                        onClick={() => openAuthModal('signup')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
-                      >
-                        Create Your Free Account
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeView === 'iot' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-                    <div className="w-2 h-8 bg-emerald-500 rounded-full" />
-                    Field Intelligence
-                  </h2>
-                  <p className="text-slate-500 text-lg">Live telemetry from your smart agricultural nodes.</p>
-                </div>
-                <IoTDashboard location={location} />
-              </div>
-            )}
-
-            {activeView === 'weather' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Climate Dynamics</h2>
-                  <p className="text-slate-500 text-lg">Hyper-local weather awareness for strategic planning.</p>
-                </div>
-                <WeatherWidget />
-              </div>
-            )}
-
-            {activeView === 'market' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Market Insight</h2>
-                  <p className="text-slate-500 text-lg">Real-time commodity valuation and trend analysis.</p>
-                </div>
-                <MarketPrices />
-              </div>
-            )}
-
-            {activeView === 'marketplace' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Farming Exchange</h2>
-                  <p className="text-slate-500 text-lg">Secure peer-to-peer commodity marketplace.</p>
-                </div>
-                <Marketplace />
               </div>
             )}
 
@@ -394,13 +368,66 @@ export default function Page() {
               </div>
             )}
 
-            {activeView === 'resources' && (
+            {activeView === 'orders' && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Knowledge Core</h2>
-                  <p className="text-slate-500 text-lg">Curated agricultural insights and best practices.</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Buy Orders</h2>
+                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Request crops from local farmers</p>
                 </div>
-                <ResourceLibrary />
+                <Marketplace forcedTab="buy-orders" />
+              </div>
+            )}
+
+            {activeView === 'listings' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">My Listings</h2>
+                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Manage your available crop products</p>
+                </div>
+                <Marketplace forcedTab="my-listings" />
+              </div>
+            )}
+
+            {activeView === 'prices' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Market Prices</h2>
+                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Real-time commodity valuation and trend analysis</p>
+                </div>
+                <MarketPrices />
+              </div>
+            )}
+
+            {activeView === 'advertising' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Market Advertising</h2>
+                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Promote your products to a wider audience</p>
+                </div>
+                <Marketplace forcedTab="advertising" />
+              </div>
+            )}
+
+            {activeView === 'weather' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Climate Dynamics</h2>
+                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Hyper-local weather awareness for strategic planning</p>
+                </div>
+                <WeatherWidget />
+              </div>
+            )}
+
+
+            {activeView === 'iot' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3 uppercase tracking-tighter">
+                    Field Intelligence
+                  </h2>
+                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Live telemetry from your smart agricultural nodes</p>
+                </div>
+                <IoTDashboard location={location} />
               </div>
             )}
           </motion.div>

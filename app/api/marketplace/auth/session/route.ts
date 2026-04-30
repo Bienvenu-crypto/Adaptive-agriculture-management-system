@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     const user = db
-      .prepare('SELECT id, name, email, phone, district, role FROM marketplace_users WHERE id = ?')
+      .prepare('SELECT id, name, email, phone, district, role, is_subscribed FROM marketplace_users WHERE id = ?')
       .get(session.user_id) as any;
 
     return NextResponse.json({ user: user || null });

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     const user = db.prepare('SELECT id, email, name, password_hash FROM users WHERE email = ?').get(email) as any;
 
-    if (!user || !verifyPassword(password, user.password_hash)) {
+    if (!user || !(await verifyPassword(password, user.password_hash))) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 

@@ -148,7 +148,7 @@ export default function WeatherWidget() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm relative overflow-hidden"
+      className="bg-white p-6 rounded-2xl shadow-sm relative overflow-hidden"
     >
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-2 text-gray-400">
@@ -201,7 +201,7 @@ export default function WeatherWidget() {
               </div>
             </div>
 
-            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl relative overflow-hidden group">
+            <div className="p-4 bg-emerald-50 rounded-xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
                 <div className="w-8 h-8 rounded-full border-4 border-emerald-500" />
               </div>
