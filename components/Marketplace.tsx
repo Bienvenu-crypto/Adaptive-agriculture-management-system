@@ -136,7 +136,7 @@ function AuthModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-md bg-slate-50 p-8 rounded-[2.5rem] overflow-y-auto max-h-[90vh] shadow-2xl"
+        className="relative w-full max-w-md bg-slate-50 p-8"
       >
         <button
           onClick={onClose}
@@ -146,13 +146,22 @@ function AuthModal({
         </button>
 
         <div className="p-8">
-          <div className="text-center mb-10">
-            <div className={`inline-block px-6 py-2 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] mb-4 shadow-sm ${role === 'seller' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
-              {role === 'seller' ? 'Seller Portal' : 'Buyer Portal'}
-            </div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
-              {mode === 'login' ? 'Authentication' : 'Registration'}
-            </h2>
+          {/* Role selector */}
+          <div className="flex rounded-2xl bg-slate-100 p-1 mb-6">
+            {(['seller', 'buyer'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => { setRole(r); setError(''); }}
+                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest capitalize transition-all ${role === r
+                  ? r === 'seller'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                {r === 'seller' ? 'Seller' : 'Buyer'}
+              </button>
+            ))}
           </div>
 
           <div className={`flex justify-center mb-4`}>
@@ -172,7 +181,7 @@ function AuthModal({
                 : 'Find the best crop deals from local farmers'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {mode === 'signup' && (
               <>
                 <div>
@@ -180,7 +189,6 @@ function AuthModal({
                   <input
                     type="text"
                     required
-                    autoComplete="off"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
@@ -192,7 +200,6 @@ function AuthModal({
                   <input
                     type="text"
                     required
-                    autoComplete="off"
                     value={form.district}
                     onChange={(e) => setForm({ ...form, district: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
@@ -208,7 +215,6 @@ function AuthModal({
               <input
                 type="email"
                 required
-                autoComplete="off"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm shadow-sm"
@@ -221,7 +227,6 @@ function AuthModal({
               <input
                 type="tel"
                 required={mode === 'signup'}
-                autoComplete="off"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm shadow-sm"
@@ -235,7 +240,6 @@ function AuthModal({
                 type="password"
                 required
                 minLength={6}
-                autoComplete="new-password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm shadow-sm"
@@ -285,12 +289,12 @@ function AuthModal({
 function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ 
-    crop: '', 
-    quantity_kg: '', 
-    price_per_kg: '', 
+  const [form, setForm] = useState({
+    crop: '',
+    quantity_kg: '',
+    price_per_kg: '',
     currency: 'UGX',
-    description: '' 
+    description: ''
   });
 
   const currencies = ['UGX', 'KES', 'RWF', 'TZS', 'NGN', 'GHS', 'ZAR', 'USD'];
@@ -338,18 +342,18 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Crop Name</label>
-              <input type="text" required autoComplete="off" value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
+              <input type="text" required value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
                 placeholder="e.g. Maize" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Currency</label>
-              <select 
-                value={form.currency} 
+              <select
+                value={form.currency}
                 onChange={e => setForm({ ...form, currency: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold appearance-none"
               >
@@ -360,13 +364,13 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Quantity (kg)</label>
-              <input type="number" required min="0.1" step="0.1" autoComplete="off" value={form.quantity_kg} onChange={e => setForm({ ...form, quantity_kg: e.target.value })}
+              <input type="number" required min="0.1" step="0.1" value={form.quantity_kg} onChange={e => setForm({ ...form, quantity_kg: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
                 placeholder="500" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Price/kg</label>
-              <input type="number" required min="1" autoComplete="off" value={form.price_per_kg} onChange={e => setForm({ ...form, price_per_kg: e.target.value })}
+              <input type="number" required min="1" value={form.price_per_kg} onChange={e => setForm({ ...form, price_per_kg: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
                 placeholder="1200" />
             </div>
@@ -374,7 +378,6 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Description (optional)</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              autoComplete="off"
               className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none font-medium"
               rows={2} placeholder="Grade A, freshly harvested..." />
           </div>
@@ -403,12 +406,12 @@ function AddBuyOrderModal({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ 
-    crop: prefillCrop || '', 
-    quantity_kg: '', 
-    max_price_per_kg: '', 
+  const [form, setForm] = useState({
+    crop: prefillCrop || '',
+    quantity_kg: '',
+    max_price_per_kg: '',
     currency: prefillCurrency,
-    description: '' 
+    description: ''
   });
 
   const currencies = ['UGX', 'KES', 'RWF', 'TZS', 'NGN', 'GHS', 'ZAR', 'USD'];
@@ -456,18 +459,18 @@ function AddBuyOrderModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Crop Name</label>
-              <input type="text" required autoComplete="off" value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
+              <input type="text" required value={form.crop} onChange={e => setForm({ ...form, crop: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
                 placeholder="e.g. Maize" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Currency</label>
-              <select 
-                value={form.currency} 
+              <select
+                value={form.currency}
                 onChange={e => setForm({ ...form, currency: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold appearance-none"
               >
@@ -478,13 +481,13 @@ function AddBuyOrderModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Quantity (kg)</label>
-              <input type="number" required min="0.1" step="0.1" autoComplete="off" value={form.quantity_kg} onChange={e => setForm({ ...form, quantity_kg: e.target.value })}
+              <input type="number" required min="0.1" step="0.1" value={form.quantity_kg} onChange={e => setForm({ ...form, quantity_kg: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
                 placeholder="200" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Max Price/kg</label>
-              <input type="number" required min="1" autoComplete="off" value={form.max_price_per_kg} onChange={e => setForm({ ...form, max_price_per_kg: e.target.value })}
+              <input type="number" required min="1" value={form.max_price_per_kg} onChange={e => setForm({ ...form, max_price_per_kg: e.target.value })}
                 className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
                 placeholder="1500" />
             </div>
@@ -492,7 +495,6 @@ function AddBuyOrderModal({
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Notes (optional)</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              autoComplete="off"
               className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none font-medium"
               rows={2} placeholder="Preferred grade, delivery notes..." />
           </div>
@@ -532,8 +534,8 @@ function TradeToast({ trade, onDismiss }: { trade: Trade; onDismiss: () => void 
           <div className="mt-3 pt-3 bg-slate-50/50 rounded-xl p-2">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none px-1">Contact Intelligence</p>
             <div className="bg-slate-50 rounded-xl px-3 py-1.5">
-               <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest block mb-0.5">Seller ID: {trade.seller_name}</span>
-               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-tighter block">{trade.seller_phone || 'REDACTED'}</span>
+              <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest block mb-0.5">Seller ID: {trade.seller_name}</span>
+              <span className="text-[10px] font-black uppercase text-emerald-600 tracking-tighter block">{trade.seller_phone || 'REDACTED'}</span>
             </div>
           </div>
         </div>
@@ -724,19 +726,15 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
 
       <div className="bg-transparent">
         {/* Header */}
-        <div className={`p-6 text-white transition-colors duration-500 ${
-          (mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'bg-blue-600' : 'bg-emerald-600'
-        }`}>
+        <div className={`p-6 text-white ${mpUser?.role === 'buyer' ? 'bg-blue-600' : 'bg-emerald-600'}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-xl font-black uppercase tracking-tighter">
-                  {forcedTab === 'buy-orders' ? 'Buyer Terminal' : forcedTab === 'my-listings' ? 'Seller Terminal' : 'AgroMarket'}
-                </h3>
+                <h3 className="text-xl font-black uppercase tracking-tighter">AgroMarket</h3>
                 <span className="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">Verified</span>
               </div>
-              <p className={`${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
-                {forcedTab === 'buy-orders' ? 'Order Management & Procurement' : forcedTab === 'my-listings' ? 'Yield Management & Sales' : 'Agricultural Output Exchange'}
+              <p className={`${mpUser?.role === 'buyer' ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
+                Agricultural Output Exchange
               </p>
             </div>
 
@@ -807,8 +805,8 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.key
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/60'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-white/60'
                   }`}
               >
                 {tab.label}
@@ -832,7 +830,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                     Available Listings
                   </h4>
                   {mpUser?.role === 'seller' && (
-                    <button 
+                    <button
                       onClick={() => {
                         if (!mpUser.is_subscribed) {
                           setActiveTab('advertising');
@@ -885,7 +883,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                             <p className="text-xs text-emerald-700 font-bold">{listing.currency} {listing.price_per_kg.toLocaleString()}/kg</p>
                           </div>
                           <button
-                            onClick={() => { 
+                            onClick={() => {
                               if (!mpUser) {
                                 setAuthRole('buyer');
                                 setShowAuthModal(true);
@@ -895,9 +893,9 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                                 alert("Your account is registered as a Seller. Please log in with a Buyer account to purchase crops.");
                                 return;
                               }
-                              setPrefillCrop(listing.crop); 
+                              setPrefillCrop(listing.crop);
                               setPrefillCurrency(listing.currency);
-                              setShowAddBuyOrder(true); 
+                              setShowAddBuyOrder(true);
                             }}
                             className="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors"
                           >
@@ -972,18 +970,14 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
           {activeTab === 'my-listings' && (
             <div>
               {!mpUser ? (
-                 <div className="text-center py-16">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Authentication Required</p>
-                    <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Seller</button>
-                 </div>
+                <div className="text-center py-16">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Authentication Required</p>
+                  <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Seller</button>
+                </div>
               ) : mpUser.role !== 'seller' ? (
-                <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                  <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span className="text-emerald-600 font-black text-xl">!</span>
-                  </div>
-                  <p className="text-slate-900 font-black uppercase text-xs tracking-widest">Seller Access Required</p>
-                  <p className="text-sm text-slate-500 mt-2 font-bold max-w-xs mx-auto">This section is for crop sellers. Please sign out and log in with a Seller account to manage listings.</p>
-                  <button onClick={handleLogout} className="mt-6 text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:underline">Switch to Seller Account</button>
+                <div className="text-center py-16 bg-red-50 rounded-2xl">
+                  <p className="text-red-600 font-black uppercase text-[10px] tracking-widest">Seller Account Required</p>
+                  <p className="text-sm text-red-900 mt-2 font-bold">Only sellers can manage crop listings.</p>
                 </div>
               ) : !mpUser.is_subscribed ? (
                 <div className="text-center py-16 bg-slate-100">
@@ -1034,18 +1028,14 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
           {activeTab === 'buy-orders' && (
             <div>
               {!mpUser ? (
-                 <div className="text-center py-16">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Authentication Required</p>
-                    <button onClick={() => { setAuthRole('buyer'); setShowAuthModal(true); }} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Buyer</button>
-                 </div>
+                <div className="text-center py-16">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Authentication Required</p>
+                  <button onClick={() => { setAuthRole('buyer'); setShowAuthModal(true); }} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Buyer</button>
+                </div>
               ) : mpUser.role !== 'buyer' ? (
-                <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                  <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span className="text-blue-600 font-black text-xl">!</span>
-                  </div>
-                  <p className="text-slate-900 font-black uppercase text-xs tracking-widest">Buyer Access Required</p>
-                  <p className="text-sm text-slate-500 mt-2 font-bold max-w-xs mx-auto">This section is for crop buyers. Please sign out and log in with a Buyer account to manage orders.</p>
-                  <button onClick={handleLogout} className="mt-6 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Switch to Buyer Account</button>
+                <div className="text-center py-16 bg-red-50 rounded-2xl">
+                  <p className="text-red-600 font-black uppercase text-[10px] tracking-widest">Buyer Account Required</p>
+                  <p className="text-sm text-red-900 mt-2 font-bold">Only buyers can place crop orders.</p>
                 </div>
               ) : (
                 <>
@@ -1097,15 +1087,14 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                   placeholder="Search trades by crop, user name, or phone number..."
                   value={tradeSearch}
                   onChange={(e) => setTradeSearch(e.target.value)}
-                  autoComplete="off"
                   className="w-full bg-slate-50 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 shadow-sm"
                 />
               </div>
               {(() => {
                 const search = tradeSearch.toLowerCase();
-                const filtered = trades.filter(t => 
-                  t.crop.toLowerCase().includes(search) || 
-                  t.seller_name.toLowerCase().includes(search) || 
+                const filtered = trades.filter(t =>
+                  t.crop.toLowerCase().includes(search) ||
+                  t.seller_name.toLowerCase().includes(search) ||
                   t.buyer_name.toLowerCase().includes(search) ||
                   (t.seller_phone && t.seller_phone.includes(search)) ||
                   (t.buyer_phone && t.buyer_phone.includes(search))
@@ -1127,8 +1116,8 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                 if (filtered.length === 0) {
                   return (
                     <div className="text-center py-16 text-slate-400 bg-slate-50 rounded-2xl">
-                       <p className="text-[10px] font-black uppercase tracking-widest">No Results Found</p>
-                       <p className="text-sm font-bold mt-1">Try a different search term</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest">No Results Found</p>
+                      <p className="text-sm font-bold mt-1">Try a different search term</p>
                     </div>
                   );
                 }
@@ -1151,7 +1140,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                         {filtered.map(trade => {
                           const isSeller = trade.seller_id === mpUser.id;
                           return (
-                            <motion.tr 
+                            <motion.tr
                               key={trade.id}
                               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                               className="hover:bg-slate-50/50 transition-colors"
@@ -1178,9 +1167,8 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                                 </div>
                               </td>
                               <td className="px-6 py-4">
-                                <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-widest ${
-                                  trade.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
-                                }`}>
+                                <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-widest ${trade.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                                  }`}>
                                   {trade.status}
                                 </span>
                               </td>
@@ -1248,7 +1236,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                         </li>
                       ))}
                     </ul>
-                    <button 
+                    <button
                       onClick={handleAdPayment}
                       disabled={isPayingAd}
                       className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50"
@@ -1260,73 +1248,53 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                 </div>
               ) : (
                 <div className="space-y-6">
-                   <div className="bg-emerald-50 rounded-2xl p-6 flex items-center justify-between">
-                     <div>
-                       <h3 className="text-lg font-black text-emerald-950 uppercase tracking-tighter">Advertising Dashboard</h3>
-                       <p className="text-xs text-emerald-700 font-bold uppercase tracking-widest">Active · Verified Account</p>
-                     </div>
-                     <div className="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
-                       Featured Seller
-                     </div>
-                   </div>
+                  <div className="bg-emerald-50 rounded-2xl p-6 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-emerald-950 uppercase tracking-tighter">Advertising Dashboard</h3>
+                      <p className="text-xs text-emerald-700 font-bold uppercase tracking-widest">Active · Verified Account</p>
+                    </div>
+                    <div className="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
+                      Featured Seller
+                    </div>
+                  </div>
 
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="bg-white p-6 rounded-2xl shadow-sm">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ad Impressions</p>
-                        <p className="text-2xl font-black text-slate-900 tracking-tight">1,284</p>
-                        <p className="text-[10px] text-emerald-600 font-bold mt-1">+12% from yesterday</p>
-                     </div>
-                     <div className="bg-white p-6 rounded-2xl shadow-sm">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Clicks/Inquiries</p>
-                        <p className="text-2xl font-black text-slate-900 tracking-tight">42</p>
-                        <p className="text-[10px] text-emerald-600 font-bold mt-1">+5% from yesterday</p>
-                     </div>
-                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ad Impressions</p>
+                      <p className="text-2xl font-black text-slate-900 tracking-tight">1,284</p>
+                      <p className="text-[10px] text-emerald-600 font-bold mt-1">+12% from yesterday</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-2xl shadow-sm">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Clicks/Inquiries</p>
+                      <p className="text-2xl font-black text-slate-900 tracking-tight">42</p>
+                      <p className="text-[10px] text-emerald-600 font-bold mt-1">+5% from yesterday</p>
+                    </div>
+                  </div>
 
-                   <div className="bg-slate-900 rounded-2xl p-8 text-white relative overflow-hidden">
-                      <div className="relative z-10">
-                        <h4 className="text-xl font-black uppercase tracking-tighter mb-4">Promote a Listing</h4>
-                        <p className="text-slate-400 text-xs mb-6 max-w-md">Select one of your existing listings to feature it at the top of the browse section for all buyers.</p>
-                        {myListings.length > 0 ? (
-                          <div className="space-y-2">
-                             {myListings.map(listing => (
-                               <div key={listing.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all cursor-pointer">
-                                 <span className="font-bold text-sm uppercase tracking-tight">{listing.crop} ({listing.quantity_kg}kg)</span>
-                                 <button className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Promote</button>
-                               </div>
-                             ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm font-bold text-emerald-400">You don't have any listings to promote yet.</p>
-                        )}
-                      </div>
-                   </div>
+                  <div className="bg-slate-900 rounded-2xl p-8 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                      <h4 className="text-xl font-black uppercase tracking-tighter mb-4">Promote a Listing</h4>
+                      <p className="text-slate-400 text-xs mb-6 max-w-md">Select one of your existing listings to feature it at the top of the browse section for all buyers.</p>
+                      {myListings.length > 0 ? (
+                        <div className="space-y-2">
+                          {myListings.map(listing => (
+                            <div key={listing.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all cursor-pointer">
+                              <span className="font-bold text-sm uppercase tracking-tight">{listing.crop} ({listing.quantity_kg}kg)</span>
+                              <button className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Promote</button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm font-bold text-emerald-400">You don't have any listings to promote yet.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Sign-in CTA (unauthenticated) */}
-          {!mpUser && activeTab !== 'browse' && activeTab !== 'advertising' && (
-            <div className="text-center py-16">
-              <h3 className="text-lg font-black text-slate-950 uppercase tracking-tighter mb-2">Restricted Access</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Create an account to participate in the exchange</p>
-              <div className="flex gap-3 justify-center">
-                {(forcedTab === 'my-listings' || !forcedTab) && (
-                  <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }}
-                    className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition-colors">
-                    Join as Seller
-                  </button>
-                )}
-                {(forcedTab === 'buy-orders' || !forcedTab) && (
-                  <button onClick={() => { setAuthRole('buyer'); setShowAuthModal(true); }}
-                    className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition-colors">
-                    Join as Buyer
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Removed Restricted Access section */}
         </div>
       </div>
     </>

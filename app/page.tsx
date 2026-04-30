@@ -125,81 +125,73 @@ export default function Page() {
                 >
                   Chatbot
                 </button>
-                {user && (
-                  <>
-                    <button
-                      onClick={() => switchView('recommendation')}
-                      className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'recommendation' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                      Crop Recommendation
-                    </button>
-                    <button
-                      onClick={() => switchView('calendar')}
-                      className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'calendar' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                      Smart Crop Calendar
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => switchView('recommendation')}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'recommendation' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Crop Recommendation
+                </button>
+                <button
+                  onClick={() => switchView('calendar')}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'calendar' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Smart Crop Calendar
+                </button>
               </div>
             )}
           </div>
 
-          {user && (
-            <>
-              {/* Crops Menu */}
-              <div className="space-y-1">
+          {/* Crops Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => toggleMenu('crops')}
+              className="w-full text-left px-6 py-2 text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between hover:text-slate-300"
+            >
+              Crops
+              <span>{expandedMenus.crops ? '−' : '+'}</span>
+            </button>
+            {expandedMenus.crops && (
+              <div className="space-y-1 pl-4">
+                <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
                 <button
-                  onClick={() => toggleMenu('crops')}
-                  className="w-full text-left px-6 py-2 text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between hover:text-slate-300"
+                  onClick={() => switchView('orders')}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                 >
-                  Crops
-                  <span>{expandedMenus.crops ? '−' : '+'}</span>
+                  Orders
                 </button>
-                {expandedMenus.crops && (
-                  <div className="space-y-1 pl-4">
-                    <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
-                    <button
-                      onClick={() => switchView('orders')}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                      Orders
-                    </button>
-                    <button
-                      onClick={() => switchView('listings')}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'listings' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                      Listings
-                    </button>
-                    
-                    <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
-                    <button
-                      onClick={() => switchView('prices')}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'prices' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                      Prices
-                    </button>
-                    <button
-                      onClick={() => switchView('advertising')}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                      Advertising
-                    </button>
-                  </div>
-                )}
-              </div>
+                <button
+                  onClick={() => switchView('listings')}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'listings' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Listings
+                </button>
 
-              <button
-                onClick={() => switchView('weather')}
-                className={`w-full text-left px-6 py-4 rounded-2xl text-[14px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather'
-                  ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30'
-                  : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white'
-                  }`}
-              >
-                Weather
-              </button>
-            </>
-          )}
+                <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
+                <button
+                  onClick={() => switchView('prices')}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'prices' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Prices
+                </button>
+                <button
+                  onClick={() => switchView('advertising')}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  Advertising
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => switchView('weather')}
+            className={`w-full text-left px-6 py-4 rounded-2xl text-[14px] font-black transition-all duration-300 flex items-center gap-3 ${activeView === 'weather'
+              ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30'
+              : 'text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white'
+              }`}
+          >
+            Weather
+          </button>
 
 
           {user && (
@@ -298,21 +290,17 @@ export default function Page() {
                 <button onClick={() => switchView('about')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black ${activeView === 'about' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>About</button>
                 <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Advisory</div>
                 <button onClick={() => switchView('chatbot')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'chatbot' ? 'text-emerald-600' : ''}`}>Chatbot</button>
-                {user && (
-                  <>
-                    <button onClick={() => switchView('recommendation')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'recommendation' ? 'text-emerald-600' : ''}`}>Recommendation</button>
-                    <button onClick={() => switchView('calendar')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'calendar' ? 'text-emerald-600' : ''}`}>Calendar</button>
-                    
-                    <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crops</div>
-                    <button onClick={() => switchView('orders')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'orders' ? 'text-emerald-600' : ''}`}>Orders</button>
-                    <button onClick={() => switchView('listings')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'listings' ? 'text-emerald-600' : ''}`}>Listings</button>
-                    <button onClick={() => switchView('prices')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'prices' ? 'text-emerald-600' : ''}`}>Prices</button>
-                    <button onClick={() => switchView('advertising')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'advertising' ? 'text-emerald-600' : ''}`}>Advertising</button>
-                    
-                    <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black mt-2 ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>Weather</button>
-                  </>
-                )}
-                
+                <button onClick={() => switchView('recommendation')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'recommendation' ? 'text-emerald-600' : ''}`}>Recommendation</button>
+                <button onClick={() => switchView('calendar')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'calendar' ? 'text-emerald-600' : ''}`}>Calendar</button>
+
+                <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crops</div>
+                <button onClick={() => switchView('orders')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'orders' ? 'text-emerald-600' : ''}`}>Orders</button>
+                <button onClick={() => switchView('listings')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'listings' ? 'text-emerald-600' : ''}`}>Listings</button>
+                <button onClick={() => switchView('prices')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'prices' ? 'text-emerald-600' : ''}`}>Prices</button>
+                <button onClick={() => switchView('advertising')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'advertising' ? 'text-emerald-600' : ''}`}>Advertising</button>
+
+                <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black mt-2 ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>Weather</button>
+
                 {user ? (
                   <button onClick={() => logout()} className="px-5 py-3 text-sm font-black text-red-600 uppercase tracking-widest mt-4">Sign Out</button>
                 ) : (
@@ -337,7 +325,7 @@ export default function Page() {
             transition={{ duration: 0.3 }}
           >
             {activeView === 'about' && <AboutPage />}
-            
+
             {activeView === 'chatbot' && (
               <div className="space-y-8">
                 <div>
