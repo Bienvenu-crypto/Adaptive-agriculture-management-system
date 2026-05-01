@@ -772,18 +772,14 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
 
           {/* Stats bar */}
           <div className="flex gap-4 mt-4 text-xs">
-            {(forcedTab === 'my-listings' || !forcedTab) && (
-              <div className="bg-white/10 rounded-xl px-3 py-2">
-                <span className="font-bold text-base">{listings.length}</span>
-                <span className="text-emerald-200 ml-1">listings</span>
-              </div>
-            )}
-            {(forcedTab === 'buy-orders' || !forcedTab) && (
-              <div className="bg-white/10 rounded-xl px-3 py-2">
-                <span className="font-bold text-base">{buyOrders.length}</span>
-                <span className="text-blue-200 ml-1">buy orders</span>
-              </div>
-            )}
+            <div className="bg-white/10 rounded-xl px-3 py-2">
+              <span className="font-bold text-base">{listings.length}</span>
+              <span className={`${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'text-blue-200' : 'text-emerald-200'} ml-1`}>listings</span>
+            </div>
+            <div className="bg-white/10 rounded-xl px-3 py-2">
+              <span className="font-bold text-base">{buyOrders.length}</span>
+              <span className={`${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'text-blue-200' : 'text-emerald-200'} ml-1`}>buy orders</span>
+            </div>
             <div className="bg-white/10 rounded-xl px-3 py-2">
               <span className="font-bold text-base">{trades.filter(t => t.status === 'pending' || t.status === 'completed').length}</span>
               <span className={`${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'text-blue-200' : 'text-emerald-200'} ml-1`}>trades</span>
@@ -987,38 +983,105 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Managed Listings ({myListings.length})</h4>
+                  <div className="flex items-center justify-between mb-8 px-2">
+                    <div>
+                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Managed Assets</h4>
+                      <p className="text-2xl font-black text-slate-950 uppercase tracking-tighter">{myListings.length} Active Listings</p>
+                    </div>
                     <button onClick={() => setShowAddListing(true)}
-                      className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-colors">
-                      Add Listing
+                      className="bg-emerald-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20 active:scale-95">
+                      + Add New Asset
                     </button>
                   </div>
+                  
                   {myListings.length === 0 ? (
-                    <div className="text-center py-16 text-slate-400 bg-slate-50 rounded-2xl">
-                      <p className="text-[10px] font-black uppercase tracking-widest">No Active Output</p>
-                      <p className="text-sm font-bold mt-1 text-slate-500">Add your first crop listing to start selling</p>
+                    <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 mb-12">
+                      <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6">
+                         <span className="text-3xl">📦</span>
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Inventory Empty</p>
+                      <p className="text-sm font-bold text-slate-600 mb-8">Your commercial output will appear here</p>
+                      <button onClick={() => setShowAddListing(true)} className="text-emerald-600 font-black text-[10px] uppercase tracking-widest hover:underline">Initialize First Listing</button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
                       {myListings.map(listing => (
-                        <div key={listing.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl shadow-sm">
-                          <div>
-                            <p className="font-black text-slate-950 uppercase tracking-tighter">{listing.crop}</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{listing.quantity_kg} KG · {listing.currency} {listing.price_per_kg.toLocaleString()}/KG</p>
-                            {listing.description && <p className="text-xs text-slate-400 mt-1 font-medium">{listing.description}</p>}
+                        <div key={listing.id} className="group relative bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-500 overflow-hidden">
+                          <div className="absolute top-0 right-0 p-4">
+                             <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${listing.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                               {listing.status}
+                             </span>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded uppercase tracking-widest">{listing.status}</span>
-                            <button onClick={() => cancelListing(listing.id)}
-                              className="text-[9px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">
-                              Cancel
-                            </button>
+                          <div className="flex items-start gap-4 mb-6">
+                            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl font-black shadow-inner">
+                              {listing.crop[0]}
+                            </div>
+                            <div>
+                              <h5 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none mb-1">{listing.crop}</h5>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU: {listing.id.slice(0,8)}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl mb-6">
+                             <div>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Volume</p>
+                               <p className="text-base font-black text-slate-900">{listing.quantity_kg.toLocaleString()} <span className="text-[10px] text-slate-500">KG</span></p>
+                             </div>
+                             <div>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Unit Price</p>
+                               <p className="text-base font-black text-emerald-600">{listing.currency} {listing.price_per_kg.toLocaleString()}</p>
+                             </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                               Listed {format(new Date(listing.created_at), 'dd MMM')}
+                             </p>
+                             <button onClick={() => cancelListing(listing.id)}
+                               className="px-4 py-2 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest">
+                               Remove Asset
+                             </button>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
+
+                  {/* Discovery: Current Demand (visible to sellers in Listings portal) */}
+                  <div className="mt-16 pt-12 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-8 px-2">
+                      <div>
+                        <h4 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">Live Demand</h4>
+                        <p className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Opportunities to Fulfill</p>
+                      </div>
+                    </div>
+                    
+                    {buyOrders.filter(o => o.buyer_id !== mpUser?.id).length === 0 ? (
+                      <div className="text-center py-12 bg-slate-50/50 rounded-[2rem]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No external demand found</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {buyOrders.filter(o => o.buyer_id !== mpUser?.id).map(order => (
+                          <div key={order.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-emerald-200 transition-all group">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 font-black text-xs shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                {order.crop[0]}
+                              </div>
+                              <div>
+                                <p className="font-black text-slate-950 uppercase tracking-tighter leading-none mb-1">{order.crop}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                  Seeking {order.quantity_kg.toLocaleString()} KG in {order.buyer_district}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-black text-slate-900 leading-none mb-1">{order.currency} {order.max_price_per_kg.toLocaleString()}/kg</p>
+                              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Max Budget</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -1039,40 +1102,119 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending Orders ({myBuyOrders.length})</h4>
+                  <div className="flex items-center justify-between mb-8 px-2">
+                    <div>
+                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Procurement Queue</h4>
+                      <p className="text-2xl font-black text-slate-950 uppercase tracking-tighter">{myBuyOrders.length} Open Orders</p>
+                    </div>
                     <button onClick={() => { setPrefillCrop(''); setShowAddBuyOrder(true); }}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors">
-                      New Order
+                      className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+                      + Create Purchase Req
                     </button>
                   </div>
+
                   {myBuyOrders.length === 0 ? (
-                    <div className="text-center py-16 text-slate-400 bg-slate-50 rounded-2xl">
-                      <p className="text-[10px] font-black uppercase tracking-widest">No Active Demand</p>
-                      <p className="text-sm font-bold mt-1 text-slate-500">Post what you want to buy</p>
+                    <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 mb-12">
+                      <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6">
+                         <span className="text-3xl">🛒</span>
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Queue Empty</p>
+                      <p className="text-sm font-bold text-slate-600 mb-8">Your crop requirements will appear here</p>
+                      <button onClick={() => { setPrefillCrop(''); setShowAddBuyOrder(true); }} className="text-blue-600 font-black text-[10px] uppercase tracking-widest hover:underline">Post Initial Requirement</button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
                       {myBuyOrders.map(order => (
-                        <div key={order.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl shadow-sm">
-                          <div>
-                            <p className="font-black text-slate-950 uppercase tracking-tighter">{order.crop}</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{order.quantity_kg} KG · MAX {order.currency} {order.max_price_per_kg.toLocaleString()}/KG</p>
-                            {order.description && <p className="text-xs text-slate-400 mt-1 font-medium">{order.description}</p>}
+                        <div key={order.id} className="group relative bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-500 overflow-hidden">
+                          <div className="absolute top-0 right-0 p-4">
+                             <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${order.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                               {order.status}
+                             </span>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <span className={`px-2 py-1 text-[9px] font-black rounded uppercase tracking-widest ${order.status === 'open' ? 'bg-blue-100 text-blue-700' : order.status === 'fulfilled' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{order.status}</span>
-                            {order.status === 'open' && (
-                              <button onClick={() => cancelBuyOrder(order.id)}
-                                className="text-[9px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">
-                                Cancel
-                              </button>
-                            )}
+                          <div className="flex items-start gap-4 mb-6">
+                            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-xl font-black shadow-inner">
+                              {order.crop[0]}
+                            </div>
+                            <div>
+                              <h5 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none mb-1">{order.crop}</h5>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">REQ: {order.id.slice(0,8)}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl mb-6">
+                             <div>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Vol</p>
+                               <p className="text-base font-black text-slate-900">{order.quantity_kg.toLocaleString()} <span className="text-[10px] text-slate-500">KG</span></p>
+                             </div>
+                             <div>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Max Price</p>
+                               <p className="text-base font-black text-blue-600">{order.currency} {order.max_price_per_kg.toLocaleString()}</p>
+                             </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                               Requested {format(new Date(order.created_at), 'dd MMM')}
+                             </p>
+                             {order.status === 'open' && (
+                               <button onClick={() => cancelBuyOrder(order.id)}
+                                 className="px-4 py-2 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest">
+                                 Revoke Request
+                               </button>
+                             )}
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
+
+                  {/* Discovery: Available Listings (visible to buyers in Orders portal) */}
+                  <div className="mt-16 pt-12 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-8 px-2">
+                      <div>
+                        <h4 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.3em] mb-1">Market Discovery</h4>
+                        <p className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Available for Purchase</p>
+                      </div>
+                    </div>
+                    
+                    {listings.length === 0 ? (
+                      <div className="text-center py-12 bg-slate-50/50 rounded-[2rem]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No external listings found</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {listings.map(listing => (
+                          <div key={listing.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-blue-200 transition-all group">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 font-black text-xs shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                {listing.crop[0]}
+                              </div>
+                              <div>
+                                <p className="font-black text-slate-950 uppercase tracking-tighter leading-none mb-1">{listing.crop}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                  {listing.quantity_kg.toLocaleString()} KG available from {listing.seller_name}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="text-sm font-black text-slate-900 leading-none mb-1">{listing.currency} {listing.price_per_kg.toLocaleString()}/kg</p>
+                                <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Asking Price</p>
+                              </div>
+                              <button
+                                onClick={() => { 
+                                  setPrefillCrop(listing.crop); 
+                                  setPrefillCurrency(listing.currency);
+                                  setShowAddBuyOrder(true); 
+                                }}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95"
+                              >
+                                Buy
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
