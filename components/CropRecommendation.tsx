@@ -32,11 +32,11 @@ export default function CropRecommendation({ location }: CropRecommendationProps
     setDetecting(true);
     try {
       const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`);
-      
+
       const mockSoilByRegion = () => {
         const isArid = location.lat > 15 && location.lat < 35;
         const isTropical = Math.abs(location.lat) < 15;
-        
+
         if (isArid) return { n: "20", p: "25", k: "15", ph: "7.8" };
         if (isTropical) return { n: "60", p: "45", k: "50", ph: "5.8" };
         return { n: "45", p: "35", k: "40", ph: "6.5" };
@@ -47,14 +47,14 @@ export default function CropRecommendation({ location }: CropRecommendationProps
       if (response.ok) {
         const data = await response.json();
         const current = data.current;
-        
+
         setFormData({
           nitrogen: soil.n,
           phosphorus: soil.p,
           potassium: soil.k,
           ph: soil.ph,
           temperature: Math.round(current.temperature_2m).toString(),
-          rainfall: current.showers > 0 || current.rain > 0 ? "250" : "120" 
+          rainfall: current.showers > 0 || current.rain > 0 ? "250" : "120"
         });
       }
     } catch (error) {
@@ -97,10 +97,10 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
             });
           } catch (err: any) {
             console.warn(`Recommendation attempt ${i + 1} failed:`, err);
-            const isRetryable = err.status === 503 || err.status === 429 || 
-                                err.message?.includes('503') || err.message?.includes('429') ||
-                                err.message?.includes('demand') || err.message?.includes('quota');
-            
+            const isRetryable = err.status === 503 || err.status === 429 ||
+              err.message?.includes('503') || err.message?.includes('429') ||
+              err.message?.includes('demand') || err.message?.includes('quota');
+
             if (isRetryable && i < retries - 1) {
               const waitTime = initialDelay * Math.pow(2, i);
               await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -136,20 +136,20 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
         logging: false,
         backgroundColor: '#f0fdf4' // Match emerald-50
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
+
       pdf.setFontSize(18);
       pdf.setTextColor(5, 150, 105);
       pdf.text("AgroBot Strategic Report", 10, 15);
       pdf.setFontSize(10);
       pdf.setTextColor(100, 116, 139);
       pdf.text(`Soil Profile: N:${formData.nitrogen} P:${formData.phosphorus} K:${formData.potassium} | Temp: ${formData.temperature}°C`, 10, 22);
-      
+
       pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight);
       pdf.save(`Crop_Strategy_${new Date().getTime()}.pdf`);
     } catch (error) {
@@ -236,7 +236,7 @@ Based on these parameters, recommend the top 3 most suitable crops to plant. For
                   <ReactMarkdown>{result}</ReactMarkdown>
                 </div>
               </div>
-              
+
               <button
                 onClick={downloadPDF}
                 className="w-full bg-emerald-600 text-white rounded-2xl py-3 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"

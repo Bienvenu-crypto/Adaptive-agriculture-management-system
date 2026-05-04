@@ -549,7 +549,7 @@ function TradeToast({ trade, onDismiss }: { trade: Trade; onDismiss: () => void 
 export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
   const [mpUser, setMpUser] = useState<MpUser | any>(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  const [activeTab, setActiveTab] = useState<'browse' | 'my-listings' | 'buy-orders' | 'trades' | 'advertising'>('browse');
+  const [activeTab, setActiveTab] = useState<'browse' | 'my-listings' | 'buy-orders' | 'trades' | 'advertising'>((forcedTab as any) || 'browse');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authRole, setAuthRole] = useState<'seller' | 'buyer'>('seller');
   const [showAddListing, setShowAddListing] = useState(false);
@@ -726,14 +726,14 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
 
       <div className="bg-transparent">
         {/* Header */}
-        <div className={`p-6 text-white ${mpUser?.role === 'buyer' ? 'bg-blue-600' : 'bg-emerald-600'}`}>
+        <div className={`p-6 text-white ${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'bg-blue-600' : 'bg-emerald-600'}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="text-xl font-black uppercase tracking-tighter">AgroMarket</h3>
                 <span className="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">Verified</span>
               </div>
-              <p className={`${mpUser?.role === 'buyer' ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
+              <p className={`${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
                 Agricultural Output Exchange
               </p>
             </div>
@@ -993,11 +993,11 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       + Add New Asset
                     </button>
                   </div>
-                  
+
                   {myListings.length === 0 ? (
                     <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 mb-12">
                       <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6">
-                         <span className="text-3xl">📦</span>
+                        <span className="text-3xl">📦</span>
                       </div>
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Inventory Empty</p>
                       <p className="text-sm font-bold text-slate-600 mb-8">Your commercial output will appear here</p>
@@ -1008,9 +1008,9 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       {myListings.map(listing => (
                         <div key={listing.id} className="group relative bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-500 overflow-hidden">
                           <div className="absolute top-0 right-0 p-4">
-                             <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${listing.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                               {listing.status}
-                             </span>
+                            <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${listing.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                              {listing.status}
+                            </span>
                           </div>
                           <div className="flex items-start gap-4 mb-6">
                             <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl font-black shadow-inner">
@@ -1018,27 +1018,27 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                             </div>
                             <div>
                               <h5 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none mb-1">{listing.crop}</h5>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU: {listing.id.slice(0,8)}</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU: {listing.id.slice(0, 8)}</p>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl mb-6">
-                             <div>
-                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Volume</p>
-                               <p className="text-base font-black text-slate-900">{listing.quantity_kg.toLocaleString()} <span className="text-[10px] text-slate-500">KG</span></p>
-                             </div>
-                             <div>
-                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Unit Price</p>
-                               <p className="text-base font-black text-emerald-600">{listing.currency} {listing.price_per_kg.toLocaleString()}</p>
-                             </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Volume</p>
+                              <p className="text-base font-black text-slate-900">{listing.quantity_kg.toLocaleString()} <span className="text-[10px] text-slate-500">KG</span></p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Unit Price</p>
+                              <p className="text-base font-black text-emerald-600">{listing.currency} {listing.price_per_kg.toLocaleString()}</p>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                               Listed {format(new Date(listing.created_at), 'dd MMM')}
-                             </p>
-                             <button onClick={() => cancelListing(listing.id)}
-                               className="px-4 py-2 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest">
-                               Remove Asset
-                             </button>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              Listed {format(new Date(listing.created_at), 'dd MMM')}
+                            </p>
+                            <button onClick={() => cancelListing(listing.id)}
+                              className="px-4 py-2 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest">
+                              Remove Asset
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -1053,7 +1053,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                         <p className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Opportunities to Fulfill</p>
                       </div>
                     </div>
-                    
+
                     {buyOrders.filter(o => o.buyer_id !== mpUser?.id).length === 0 ? (
                       <div className="text-center py-12 bg-slate-50/50 rounded-[2rem]">
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No external demand found</p>
@@ -1116,7 +1116,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                   {myBuyOrders.length === 0 ? (
                     <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 mb-12">
                       <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6">
-                         <span className="text-3xl">🛒</span>
+                        <span className="text-3xl">🛒</span>
                       </div>
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Queue Empty</p>
                       <p className="text-sm font-bold text-slate-600 mb-8">Your crop requirements will appear here</p>
@@ -1127,9 +1127,9 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       {myBuyOrders.map(order => (
                         <div key={order.id} className="group relative bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-500 overflow-hidden">
                           <div className="absolute top-0 right-0 p-4">
-                             <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${order.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
-                               {order.status}
-                             </span>
+                            <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${order.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                              {order.status}
+                            </span>
                           </div>
                           <div className="flex items-start gap-4 mb-6">
                             <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-xl font-black shadow-inner">
@@ -1137,29 +1137,29 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                             </div>
                             <div>
                               <h5 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none mb-1">{order.crop}</h5>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">REQ: {order.id.slice(0,8)}</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">REQ: {order.id.slice(0, 8)}</p>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl mb-6">
-                             <div>
-                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Vol</p>
-                               <p className="text-base font-black text-slate-900">{order.quantity_kg.toLocaleString()} <span className="text-[10px] text-slate-500">KG</span></p>
-                             </div>
-                             <div>
-                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Max Price</p>
-                               <p className="text-base font-black text-blue-600">{order.currency} {order.max_price_per_kg.toLocaleString()}</p>
-                             </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Vol</p>
+                              <p className="text-base font-black text-slate-900">{order.quantity_kg.toLocaleString()} <span className="text-[10px] text-slate-500">KG</span></p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Max Price</p>
+                              <p className="text-base font-black text-blue-600">{order.currency} {order.max_price_per_kg.toLocaleString()}</p>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                               Requested {format(new Date(order.created_at), 'dd MMM')}
-                             </p>
-                             {order.status === 'open' && (
-                               <button onClick={() => cancelBuyOrder(order.id)}
-                                 className="px-4 py-2 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest">
-                                 Revoke Request
-                               </button>
-                             )}
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              Requested {format(new Date(order.created_at), 'dd MMM')}
+                            </p>
+                            {order.status === 'open' && (
+                              <button onClick={() => cancelBuyOrder(order.id)}
+                                className="px-4 py-2 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest">
+                                Revoke Request
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1174,7 +1174,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                         <p className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Available for Purchase</p>
                       </div>
                     </div>
-                    
+
                     {listings.length === 0 ? (
                       <div className="text-center py-12 bg-slate-50/50 rounded-[2rem]">
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No external listings found</p>
@@ -1200,10 +1200,10 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                                 <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Asking Price</p>
                               </div>
                               <button
-                                onClick={() => { 
-                                  setPrefillCrop(listing.crop); 
+                                onClick={() => {
+                                  setPrefillCrop(listing.crop);
                                   setPrefillCurrency(listing.currency);
-                                  setShowAddBuyOrder(true); 
+                                  setShowAddBuyOrder(true);
                                 }}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95"
                               >

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
+import crypto from 'crypto';
+
 
 async function getMarketplaceUser() {
   const cookieStore = await cookies();

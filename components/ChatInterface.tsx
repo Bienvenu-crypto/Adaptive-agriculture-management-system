@@ -1,5 +1,13 @@
 'use client';
 
+const generateId = () => {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Image from 'next/image';
@@ -22,7 +30,7 @@ interface LocationProps {
 
 export default function ChatInterface({ location }: LocationProps) {
   const { user } = useAuth();
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionId] = useState(() => generateId());
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -133,7 +141,7 @@ export default function ChatInterface({ location }: LocationProps) {
     if ((!input.trim() && !selectedImage) || isLoading) return;
 
     const userMessage: Message = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       role: 'user',
       content: input,
       image: selectedImage || undefined,
@@ -214,7 +222,7 @@ export default function ChatInterface({ location }: LocationProps) {
       if (!response) throw new Error("I'm currently experiencing high demand. Please try again in a moment.");
 
       const botMessage: Message = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         role: 'bot',
         content: response.text || "I'm sorry, I couldn't process that request. Please try again.",
       };
@@ -225,7 +233,7 @@ export default function ChatInterface({ location }: LocationProps) {
       const errorMessage = error.message || "Unknown error";
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'bot', content: `Sorry, I encountered an error: ${errorMessage}. Please check your connection and try again.` },
+        { id: generateId(), role: 'bot', content: `Sorry, I encountered an error: ${errorMessage}. Please check your connection and try again.` },
       ]);
     } finally {
       setIsLoading(false);

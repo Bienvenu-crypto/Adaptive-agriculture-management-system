@@ -155,7 +155,7 @@ export default function Page() {
                 <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
                 <button
                   onClick={() => switchView('orders')}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                 >
                   Orders
                 </button>

@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 
       const matchQty = Math.min(remainingListingQty, order.quantity_kg);
       const tradeId = crypto.randomUUID();
-      const agreedPrice = price_per_kg; 
+      const agreedPrice = price_per_kg;
       const totalValue = agreedPrice * matchQty;
 
       db.prepare(

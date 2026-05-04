@@ -178,8 +178,8 @@ export default function MarketPrices() {
               sendGAEvent({ event: 'market_trend_view', value: item.crop });
             }}
             className={`flex items-center justify-between p-3 rounded-xl transition-colors cursor-pointer ${selectedCrop === item.crop
-                ? 'bg-indigo-50 shadow-sm'
-                : 'hover:bg-slate-50'
+              ? 'bg-indigo-50 shadow-sm'
+              : 'hover:bg-slate-50'
               }`}
           >
             <div className="flex items-center gap-3">
@@ -195,7 +195,7 @@ export default function MarketPrices() {
                 {item.price.toLocaleString()}
               </span>
               <div className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${item.trend === 'up' ? 'bg-emerald-100 text-emerald-700' :
-                  item.trend === 'down' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
+                item.trend === 'down' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
                 }`}>
                 {item.change}
               </div>

@@ -28,7 +28,7 @@ export default function SmartCropCalendar() {
   const [showHistory, setShowHistory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [aiCache] = useState<Map<string, CalendarData>>(new Map());
-  
+
   const [formData, setFormData] = useState({
     crop: '',
     plantingDate: '',
@@ -101,8 +101,8 @@ export default function SmartCropCalendar() {
     setData(null);
 
     // 1. Check Personal History first
-    const existing = history.find(h => 
-      h.crop.toLowerCase() === formData.crop.toLowerCase() && 
+    const existing = history.find(h =>
+      h.crop.toLowerCase() === formData.crop.toLowerCase() &&
       h.region.toLowerCase() === formData.region.toLowerCase() &&
       h.planting_date === formData.plantingDate
     );
@@ -170,13 +170,13 @@ Make the advice highly actionable for a smallholder farmer.`;
 
       const jsonStr = response.text || "{}";
       const parsedData = JSON.parse(jsonStr) as CalendarData;
-      
+
       // Save to Session Cache
       const cacheKey = `${formData.crop.toLowerCase()}-${formData.region.toLowerCase()}`;
       aiCache.set(cacheKey, parsedData);
 
       setData(parsedData);
-      
+
       // Auto-save if user is logged in
       if (user?.email) {
         saveCalendar(parsedData);
@@ -202,7 +202,7 @@ Make the advice highly actionable for a smallholder farmer.`;
           </div>
         </div>
         {user && (
-          <button 
+          <button
             onClick={() => setShowHistory(!showHistory)}
             className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 hover:text-indigo-600 flex items-center gap-2"
             title="Calendar History"
@@ -240,11 +240,11 @@ Make the advice highly actionable for a smallholder farmer.`;
                   placeholder="Select Date"
                   onFocus={(e) => {
                     e.target.type = 'date';
-                    try { e.target.showPicker(); } catch (err) {}
+                    try { e.target.showPicker(); } catch (err) { }
                   }}
                   onClick={(e) => {
                     e.currentTarget.type = 'date';
-                    try { e.currentTarget.showPicker(); } catch (err) {}
+                    try { e.currentTarget.showPicker(); } catch (err) { }
                   }}
                   onBlur={(e) => {
                     if (!e.target.value) e.target.type = 'text';
@@ -284,7 +284,7 @@ Make the advice highly actionable for a smallholder farmer.`;
         <div className="lg:col-span-8 relative">
           <AnimatePresence>
             {showHistory && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
@@ -314,12 +314,12 @@ Make the advice highly actionable for a smallholder farmer.`;
                       >
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                             <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{item.crop}</span>
-                             <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">• {new Date(item.timestamp).toLocaleDateString()}</span>
+                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{item.crop}</span>
+                            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">• {new Date(item.timestamp).toLocaleDateString()}</span>
                           </div>
                           <p className="text-xs text-slate-600 font-medium">{item.region} · Planted on {item.planting_date}</p>
                         </div>
-                        <button 
+                        <button
                           onClick={(e) => deleteFromHistory(e, item.id)}
                           className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 relative z-10"
                         >
@@ -374,7 +374,7 @@ Make the advice highly actionable for a smallholder farmer.`;
                       onClick={async () => {
                         const { jsPDF } = await import('jspdf');
                         const autoTable = (await import('jspdf-autotable')).default;
-                        
+
                         const doc = new jsPDF();
                         doc.setFontSize(22);
                         doc.setTextColor(30, 41, 59);
@@ -406,7 +406,7 @@ Make the advice highly actionable for a smallholder farmer.`;
                       PDF
                     </button>
                     {isSaving && (
-                        <div className="px-4 py-2 text-[10px] text-indigo-400 font-black uppercase tracking-widest animate-pulse">Saving...</div>
+                      <div className="px-4 py-2 text-[10px] text-indigo-400 font-black uppercase tracking-widest animate-pulse">Saving...</div>
                     )}
                   </div>
                 </div>

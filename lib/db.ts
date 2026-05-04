@@ -191,15 +191,15 @@ db.exec(`
 
 try {
   db.exec('ALTER TABLE users ADD COLUMN district TEXT');
-} catch (e) {}
+} catch (e) { }
 
 try {
   db.exec('ALTER TABLE trades ADD COLUMN completed_at DATETIME');
-} catch (e) {}
+} catch (e) { }
 
 try {
   db.exec('ALTER TABLE chats ADD COLUMN timestamp DATETIME DEFAULT CURRENT_TIMESTAMP');
-} catch (e) {}
+} catch (e) { }
 
 try {
   db.exec("ALTER TABLE listings ADD COLUMN currency TEXT NOT NULL DEFAULT 'UGX'");
@@ -208,10 +208,10 @@ try {
   db.exec('ALTER TABLE trades ADD COLUMN payment_status TEXT NOT NULL DEFAULT "unpaid"');
   db.exec('ALTER TABLE trades ADD COLUMN payment_method TEXT');
   db.exec('ALTER TABLE trades ADD COLUMN payment_phone TEXT');
-} catch (e) {}
+} catch (e) { }
 
 try {
   db.exec('ALTER TABLE marketplace_users ADD COLUMN is_subscribed INTEGER DEFAULT 0');
-} catch (e) {}
+} catch (e) { }
 
 export default db;
