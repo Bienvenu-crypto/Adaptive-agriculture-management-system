@@ -45,7 +45,7 @@ export default function AboutPage() {
           Empowering Farmers with <span className="text-emerald-600">Intelligence</span>
         </h2>
         <p className="text-slate-500 text-lg max-w-3xl leading-relaxed">
-          The Adaptive Agriculture Management System (AAMS) is a state-of-the-art platform designed to modernize 
+          The Agriculture Management System (AMS) is a state-of-the-art platform designed to modernize 
           farming practices through data-driven insights, AI-powered advisory, and secure market access.
         </p>
       </section>

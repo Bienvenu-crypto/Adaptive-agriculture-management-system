@@ -93,7 +93,7 @@ export default function Page() {
           className="flex flex-col mb-12 cursor-pointer"
           onClick={() => switchView('about')}
         >
-          <span className="text-[1.3rem] font-bold text-white leading-[1.2] tracking-tight">Adaptive Agriculture</span>
+          <span className="text-[1.3rem] font-bold text-white leading-[1.2] tracking-tight">Agriculture</span>
           <span className="text-[1.3rem] font-bold text-emerald-400 leading-[1.2] tracking-tight">Management System</span>
         </div>
 
@@ -257,7 +257,7 @@ export default function Page() {
       <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex flex-col" onClick={() => switchView('about')}>
-            <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Adaptive Agriculture</span>
+            <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Agriculture</span>
             <span className="text-sm font-black tracking-tight text-emerald-900 leading-[1.1]">Management System</span>
           </div>
 
