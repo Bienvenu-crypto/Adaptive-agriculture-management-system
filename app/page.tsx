@@ -220,7 +220,7 @@ export default function Page() {
       </nav>
 
       {/* Desktop Top Header */}
-      <div className={`hidden lg:flex fixed top-0 right-0 left-72 h-24 items-center justify-between px-12 z-40 ${activeView === 'about' ? 'bg-white/70' : 'bg-[#F8F9FA]/50'} backdrop-blur-md transition-colors duration-500`}>
+      <div className={`hidden lg:flex fixed top-0 right-0 left-72 h-24 items-center justify-between px-12 z-40 ${activeView === 'about' ? 'bg-white/70' : 'bg-[#F8F9FA]/50'} backdrop-blur-md transition-colors duration-500 border-b border-slate-200/50 shadow-sm`}>
         <h1 className="flex flex-col leading-none">
           <span className="text-3xl font-black text-emerald-950 tracking-tighter">
             Smart Farming <span className="text-emerald-600">Intelligence</span>
@@ -308,7 +308,7 @@ export default function Page() {
         </AnimatePresence>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 lg:pt-32 lg:pb-16">
+      <div className="max-w-7xl mx-auto px-6 py-12 lg:pt-36 lg:pb-16">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeView}
