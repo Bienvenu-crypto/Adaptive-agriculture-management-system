@@ -126,10 +126,10 @@ db.exec(`
     payment_method TEXT,
     payment_phone TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (listing_id) REFERENCES listings(id),
-    FOREIGN KEY (buy_order_id) REFERENCES buy_orders(id),
-    FOREIGN KEY (seller_id) REFERENCES marketplace_users(id),
-    FOREIGN KEY (buyer_id) REFERENCES marketplace_users(id)
+    FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
+    FOREIGN KEY (buy_order_id) REFERENCES buy_orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES marketplace_users(id) ON DELETE CASCADE,
+    FOREIGN KEY (buyer_id) REFERENCES marketplace_users(id) ON DELETE CASCADE
   );
 
   -- Create indexes for better query performance

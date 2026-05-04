@@ -44,16 +44,23 @@ export async function DELETE(req: Request) {
     if (type === 'app-user') {
       db.prepare('DELETE FROM users WHERE id = ?').run(id);
     } else if (type === 'marketplace-user') {
+      // Delete dependent records that don't have cascade
+      db.prepare('DELETE FROM trades WHERE seller_id = ? OR buyer_id = ?').run(id, id);
       db.prepare('DELETE FROM marketplace_users WHERE id = ?').run(id);
     } else if (type === 'chat') {
       db.prepare('DELETE FROM chats WHERE id = ?').run(id);
     } else if (type === 'listing') {
+      // Delete trades associated with this listing
+      db.prepare('DELETE FROM trades WHERE listing_id = ?').run(id);
       db.prepare('DELETE FROM listings WHERE id = ?').run(id);
     } else if (type === 'order') {
+      // Delete trades associated with this order
+      db.prepare('DELETE FROM trades WHERE buy_order_id = ?').run(id);
       db.prepare('DELETE FROM buy_orders WHERE id = ?').run(id);
     } else if (type === 'trade') {
       db.prepare('DELETE FROM trades WHERE id = ?').run(id);
     }
+
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -38,12 +38,19 @@ export async function DELETE(req: Request) {
     }
 
     if (type === 'user') {
+      // First delete dependent trades
+      db.prepare('DELETE FROM trades WHERE seller_id = ? OR buyer_id = ?').run(id, id);
       db.prepare('DELETE FROM marketplace_users WHERE id = ?').run(id);
     } else if (type === 'listing') {
+      // Delete trades associated with this listing
+      db.prepare('DELETE FROM trades WHERE listing_id = ?').run(id);
       db.prepare('DELETE FROM listings WHERE id = ?').run(id);
     } else if (type === 'order') {
+      // Delete trades associated with this order
+      db.prepare('DELETE FROM trades WHERE buy_order_id = ?').run(id);
       db.prepare('DELETE FROM buy_orders WHERE id = ?').run(id);
     }
+
 
     return NextResponse.json({ ok: true });
   } catch (error) {
