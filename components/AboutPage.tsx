@@ -27,6 +27,17 @@ const FEATURES = [
 ];
 
 export default function AboutPage() {
+  const [stats, setStats] = React.useState({ participants: 0, trades: 0, accuracy: '95.0', listings: 0 });
+
+  React.useEffect(() => {
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.participants !== undefined) setStats(data);
+      })
+      .catch(() => { });
+  }, []);
+
   return (
     <div className="space-y-16">
       <section>
@@ -63,15 +74,15 @@ export default function AboutPage() {
           <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-12">Performance Metrics</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
             <div>
-              <div className="text-5xl font-black mb-2 tracking-tighter">#1</div>
+              <div className="text-5xl font-black mb-2 tracking-tighter">{stats.trades > 10 ? `#${Math.floor(stats.trades / 100) + 1}` : '#1'}</div>
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Regional Market Leader</p>
             </div>
             <div>
-              <div className="text-5xl font-black mb-2 tracking-tighter">98%</div>
+              <div className="text-5xl font-black mb-2 tracking-tighter">{stats.accuracy}%</div>
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Predictive Accuracy</p>
             </div>
             <div>
-              <div className="text-5xl font-black mb-2 tracking-tighter">10k+</div>
+              <div className="text-5xl font-black mb-2 tracking-tighter">{stats.participants.toLocaleString()}</div>
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Verified Participants</p>
             </div>
           </div>
