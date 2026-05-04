@@ -168,12 +168,6 @@ export default function Page() {
 
                 <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
                 <button
-                  onClick={() => switchView('prices')}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'prices' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  Prices
-                </button>
-                <button
                   onClick={() => switchView('advertising')}
                   className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                 >
@@ -296,7 +290,6 @@ export default function Page() {
                 <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crops</div>
                 <button onClick={() => switchView('orders')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'orders' ? 'text-emerald-600' : ''}`}>Orders</button>
                 <button onClick={() => switchView('listings')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'listings' ? 'text-emerald-600' : ''}`}>Listings</button>
-                <button onClick={() => switchView('prices')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'prices' ? 'text-emerald-600' : ''}`}>Prices</button>
                 <button onClick={() => switchView('advertising')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'advertising' ? 'text-emerald-600' : ''}`}>Advertising</button>
 
                 <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black mt-2 ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>Weather</button>
@@ -376,15 +369,6 @@ export default function Page() {
               </div>
             )}
 
-            {activeView === 'prices' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Market Prices</h2>
-                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Real-time commodity valuation and trend analysis</p>
-                </div>
-                <MarketPrices />
-              </div>
-            )}
 
             {activeView === 'advertising' && (
               <div className="space-y-8">
