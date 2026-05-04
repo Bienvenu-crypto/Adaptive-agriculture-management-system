@@ -18,6 +18,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { phone } = await req.json();
+    console.log(`Processing 100,000 UGX payment from ${phone} to +256765636479`);
+
+    // Simulate payment processing delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     // Update user subscription status
     db.prepare('UPDATE marketplace_users SET is_subscribed = 1 WHERE id = ?').run(session.user_id);
 

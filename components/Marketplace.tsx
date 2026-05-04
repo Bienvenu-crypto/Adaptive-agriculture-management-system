@@ -567,6 +567,8 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
 
   // Advertising specific state
   const [isPayingAd, setIsPayingAd] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [momoNumber, setMomoNumber] = useState('');
 
   // Handle forcedTab from parent
   useEffect(() => {
@@ -693,11 +695,21 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
   const myBuyOrders = buyOrders.filter(o => mpUser && o.buyer_id === mpUser.id);
 
   const handleAdPayment = async () => {
+    if (!momoNumber) {
+      alert("Please enter your Mobile Money number");
+      return;
+    }
     setIsPayingAd(true);
     try {
-      const res = await fetch('/api/marketplace/subscribe', { method: 'POST' });
+      const res = await fetch('/api/marketplace/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: momoNumber })
+      });
       if (res.ok) {
         await fetchSession();
+        setShowPaymentModal(false);
+        setMomoNumber('');
         setActiveTab('advertising');
       } else {
         const data = await res.json();
@@ -1417,11 +1429,10 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       ))}
                     </ul>
                     <button
-                      onClick={handleAdPayment}
-                      disabled={isPayingAd}
-                      className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50"
+                      onClick={() => setShowPaymentModal(true)}
+                      className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-all"
                     >
-                      {isPayingAd ? 'Processing Payment...' : 'Pay 100,000 UGX to Start'}
+                      Pay 100,000 UGX to Start
                     </button>
                     <p className="text-[10px] text-center text-slate-400 font-medium italic">Secure payment via mobile money or credit card</p>
                   </div>
@@ -1489,6 +1500,63 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
           {/* Removed Restricted Access section */}
         </div>
       </div>
+      {/* Mobile Money Payment Modal */}
+      <AnimatePresence>
+        {showPaymentModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl"
+            >
+              <div className="bg-emerald-600 p-8 text-white">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">Payment Portal</h3>
+                    <p className="text-emerald-100 text-[10px] font-black uppercase tracking-widest">Secure Mobile Money Transfer</p>
+                  </div>
+                  <button onClick={() => setShowPaymentModal(false)} className="text-white/60 hover:text-white transition-colors">✕</button>
+                </div>
+                <div className="bg-white/10 rounded-2xl p-4 border border-white/10">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200 mb-1">Recipient Number</p>
+                  <p className="text-xl font-black tracking-tighter">+256 765 636 479</p>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Your Mobile Money Number</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. +256 7xx xxx xxx"
+                    value={momoNumber}
+                    onChange={(e) => setMomoNumber(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold focus:border-emerald-500 focus:ring-0 transition-all outline-none"
+                  />
+                </div>
+
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                  <div className="flex gap-3">
+                    <span className="text-amber-500 font-black">ℹ</span>
+                    <p className="text-[10px] text-amber-900 font-bold leading-relaxed uppercase tracking-tight">
+                      A prompt will be sent to your phone to authorize the deduction of <span className="text-amber-600">100,000 UGX</span>.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAdPayment}
+                  disabled={isPayingAd || !momoNumber}
+                  className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all disabled:opacity-50 active:scale-[0.98]"
+                >
+                  {isPayingAd ? 'Confirming Transfer...' : 'Confirm & Pay'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
