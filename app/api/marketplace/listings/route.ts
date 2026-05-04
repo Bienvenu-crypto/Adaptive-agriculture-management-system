@@ -43,7 +43,7 @@ export async function GET(req: Request) {
       query += ' AND l.seller_id = ?';
       params.push(sellerId);
     }
-    query += ' ORDER BY l.created_at DESC';
+    query += ' ORDER BY l.is_promoted DESC, l.created_at DESC';
 
     const listings = db.prepare(query).all(...params) as any[];
 
@@ -176,5 +176,26 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to cancel listing' }, { status: 500 });
+  }
+}
+
+// PATCH /api/marketplace/listings — toggle promotion status
+export async function PATCH(req: Request) {
+  try {
+    const seller = await getMarketplaceUser('seller');
+    if (!seller) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, is_promoted } = await req.json();
+    const listing = db
+      .prepare('SELECT * FROM listings WHERE id = ? AND seller_id = ?')
+      .get(id, seller.id) as any;
+    if (!listing) return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+
+    db.prepare("UPDATE listings SET is_promoted = ? WHERE id = ?").run(is_promoted ? 1 : 0, id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update listing' }, { status: 500 });
   }
 }

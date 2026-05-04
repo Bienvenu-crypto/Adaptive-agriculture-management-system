@@ -671,6 +671,15 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
     fetchListings();
   };
 
+  const togglePromotion = async (id: string, currentStatus: boolean) => {
+    await fetch('/api/marketplace/listings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, is_promoted: !currentStatus }),
+    });
+    fetchListings();
+  };
+
   const cancelBuyOrder = async (id: string) => {
     await fetch('/api/marketplace/buy-orders', {
       method: 'DELETE',
@@ -1212,7 +1221,12 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                                 {listing.crop[0]}
                               </div>
                               <div>
-                                <p className="font-black text-slate-950 uppercase tracking-tighter leading-none mb-1">{listing.crop}</p>
+                                <p className="font-black text-slate-950 uppercase tracking-tighter leading-none mb-1">
+                                  {listing.crop}
+                                  {listing.is_promoted === 1 && (
+                                    <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[7px] font-black rounded uppercase tracking-[0.2em] border border-amber-200">PROMOTED</span>
+                                  )}
+                                </p>
                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                   {listing.quantity_kg.toLocaleString()} KG available from {listing.seller_name}
                                 </p>
@@ -1448,9 +1462,17 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       {myListings.length > 0 ? (
                         <div className="space-y-2">
                           {myListings.map(listing => (
-                            <div key={listing.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all cursor-pointer">
-                              <span className="font-bold text-sm uppercase tracking-tight">{listing.crop} ({listing.quantity_kg}kg)</span>
-                              <button className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Promote</button>
+                            <div key={listing.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+                              <span className="font-bold text-sm uppercase tracking-tight">
+                                {listing.crop} ({listing.quantity_kg}kg)
+                                {listing.is_promoted === 1 && <span className="ml-2 text-[8px] text-emerald-400 font-black">★ ACTIVE</span>}
+                              </span>
+                              <button
+                                onClick={() => togglePromotion(listing.id, listing.is_promoted === 1)}
+                                className={`${listing.is_promoted === 1 ? 'bg-white/10 text-slate-300' : 'bg-emerald-500 text-white'} px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all`}
+                              >
+                                {listing.is_promoted === 1 ? 'Unpromote' : 'Promote'}
+                              </button>
                             </div>
                           ))}
                         </div>

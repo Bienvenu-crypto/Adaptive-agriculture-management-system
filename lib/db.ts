@@ -93,6 +93,7 @@ db.exec(`
     currency TEXT NOT NULL DEFAULT 'UGX',
     description TEXT,
     status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'sold', 'cancelled')),
+    is_promoted INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (seller_id) REFERENCES marketplace_users(id) ON DELETE CASCADE
   );
@@ -220,6 +221,10 @@ try {
 
 try {
   db.exec('ALTER TABLE marketplace_users ADD COLUMN is_subscribed INTEGER DEFAULT 0');
+} catch (e) { }
+
+try {
+  db.exec('ALTER TABLE listings ADD COLUMN is_promoted INTEGER DEFAULT 0');
 } catch (e) { }
 
 export default db;
