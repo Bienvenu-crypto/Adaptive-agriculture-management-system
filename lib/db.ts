@@ -187,6 +187,14 @@ db.exec(`
     battery_level REAL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS marketplace_analytics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seller_id TEXT NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('impression', 'click')),
+    listing_id TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (seller_id) REFERENCES marketplace_users(id) ON DELETE CASCADE
+  );
 `);
 
 try {

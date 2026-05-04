@@ -45,7 +45,18 @@ export async function GET(req: Request) {
     }
     query += ' ORDER BY l.created_at DESC';
 
-    const listings = db.prepare(query).all(...params);
+    const listings = db.prepare(query).all(...params) as any[];
+
+    // Record impressions for unique sellers in this fetch
+    const uniqueSellers = Array.from(new Set(listings.map(l => l.seller_id)));
+    if (uniqueSellers.length > 0) {
+      const stmt = db.prepare('INSERT INTO marketplace_analytics (seller_id, type) VALUES (?, ?)');
+      const insertMany = db.transaction((sellers) => {
+        for (const sId of sellers) stmt.run(sId, 'impression');
+      });
+      insertMany(uniqueSellers);
+    }
+
     return NextResponse.json({ listings });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 });

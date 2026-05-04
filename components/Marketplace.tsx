@@ -562,6 +562,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [buyOrders, setBuyOrders] = useState<BuyOrder[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [adStats, setAdStats] = useState({ impressions: 0, clicks: 0, impGrowth: '0', clickGrowth: '0' });
   const [loadingData, setLoadingData] = useState(false);
 
   // Advertising specific state
@@ -609,11 +610,23 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
     setTrades(data.trades || []);
   }, []);
 
+  const fetchAdStats = useCallback(async () => {
+    if (mpUser?.role !== 'seller') return;
+    const res = await fetch('/api/marketplace/stats');
+    const data = await res.json();
+    if (res.ok) setAdStats(data);
+  }, [mpUser]);
+
   const fetchAll = useCallback(async () => {
     setLoadingData(true);
-    await Promise.all([fetchListings(), fetchBuyOrders(), ...(mpUser ? [fetchTrades()] : [])]);
+    await Promise.all([
+      fetchListings(),
+      fetchBuyOrders(),
+      ...(mpUser ? [fetchTrades()] : []),
+      ...(mpUser?.role === 'seller' ? [fetchAdStats()] : [])
+    ]);
     setLoadingData(false);
-  }, [fetchListings, fetchBuyOrders, fetchTrades, mpUser]);
+  }, [fetchListings, fetchBuyOrders, fetchTrades, fetchAdStats, mpUser]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -637,6 +650,16 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
     } catch (err) {
       console.error('Failed to complete trade');
     }
+  };
+
+  const recordClick = async (listingId: string, sellerId: string) => {
+    try {
+      await fetch('/api/marketplace/stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId, sellerId }),
+      });
+    } catch (err) { }
   };
 
   const cancelListing = async (id: string) => {
@@ -889,6 +912,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                                 alert("Your account is registered as a Seller. Please log in with a Buyer account to purchase crops.");
                                 return;
                               }
+                              recordClick(listing.id, listing.seller_id);
                               setPrefillCrop(listing.crop);
                               setPrefillCurrency(listing.currency);
                               setShowAddBuyOrder(true);
@@ -1403,13 +1427,17 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-white p-6 rounded-2xl shadow-sm">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ad Impressions</p>
-                      <p className="text-2xl font-black text-slate-900 tracking-tight">1,284</p>
-                      <p className="text-[10px] text-emerald-600 font-bold mt-1">+12% from yesterday</p>
+                      <p className="text-2xl font-black text-slate-900 tracking-tight">{adStats.impressions.toLocaleString()}</p>
+                      <p className={`text-[10px] font-bold mt-1 ${parseFloat(adStats.impGrowth) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {parseFloat(adStats.impGrowth) >= 0 ? '+' : ''}{adStats.impGrowth}% from yesterday
+                      </p>
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-sm">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Clicks/Inquiries</p>
-                      <p className="text-2xl font-black text-slate-900 tracking-tight">42</p>
-                      <p className="text-[10px] text-emerald-600 font-bold mt-1">+5% from yesterday</p>
+                      <p className="text-2xl font-black text-slate-900 tracking-tight">{adStats.clicks.toLocaleString()}</p>
+                      <p className={`text-[10px] font-bold mt-1 ${parseFloat(adStats.clickGrowth) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {parseFloat(adStats.clickGrowth) >= 0 ? '+' : ''}{adStats.clickGrowth}% from yesterday
+                      </p>
                     </div>
                   </div>
 
