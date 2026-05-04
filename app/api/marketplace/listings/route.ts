@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       SELECT l.*, mu.name as seller_name, mu.district as seller_district, mu.phone as seller_phone
       FROM listings l
       JOIN marketplace_users mu ON l.seller_id = mu.id
-      WHERE l.status = 'active'
+      WHERE l.status = 'active' AND mu.is_subscribed = 1
     `;
     const params: any[] = [];
 
@@ -58,6 +58,9 @@ export async function POST(req: Request) {
     const seller = await getMarketplaceUser('seller');
     if (!seller) {
       return NextResponse.json({ error: 'Unauthorized. Please sign in as a seller.' }, { status: 401 });
+    }
+    if (!seller.is_subscribed) {
+      return NextResponse.json({ error: 'Subscription required. Please pay the activation fee in the Advertising portal.' }, { status: 403 });
     }
 
     const { crop, quantity_kg, price_per_kg, currency, description } = await req.json();

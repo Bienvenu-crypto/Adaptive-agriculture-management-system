@@ -726,19 +726,19 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
 
       <div className="bg-transparent">
         {/* Header */}
-        <div className={`p-6 text-white ${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'bg-blue-600' : 'bg-emerald-600'}`}>
+        <div className={`p-6 text-white ${(forcedTab === 'buy-orders' || activeTab === 'buy-orders' || (mpUser?.role === 'buyer' && activeTab === 'browse')) ? 'bg-blue-600' : 'bg-emerald-600'}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="text-xl font-black uppercase tracking-tighter">AgroMarket</h3>
                 <span className="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">Verified</span>
               </div>
-              <p className={`${(mpUser?.role === 'buyer' || forcedTab === 'buy-orders') ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
+              <p className={`${(forcedTab === 'buy-orders' || activeTab === 'buy-orders' || (mpUser?.role === 'buyer' && activeTab === 'browse')) ? 'text-blue-100' : 'text-emerald-100'} text-[10px] font-bold uppercase tracking-widest`}>
                 Agricultural Output Exchange
               </p>
             </div>
 
-            {mpUser ? (
+            {(mpUser && (!forcedTab || (forcedTab === 'my-listings' && mpUser.role === 'seller') || (forcedTab === 'buy-orders' && mpUser.role === 'buyer') || (forcedTab === 'advertising' && mpUser.role === 'seller'))) ? (
               <div className="flex items-center gap-4 flex-shrink-0">
                 <div className="text-right">
                   <p className="font-black text-sm uppercase tracking-tighter">{mpUser.name}</p>
@@ -750,7 +750,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
               </div>
             ) : (
               <div className="flex gap-2 flex-shrink-0">
-                {(forcedTab === 'my-listings' || !forcedTab) && (
+                {(activeTab === 'my-listings' || forcedTab === 'my-listings' || !forcedTab) && (
                   <button
                     onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }}
                     className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
@@ -758,10 +758,10 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                     Login as Seller
                   </button>
                 )}
-                {(forcedTab === 'buy-orders' || !forcedTab) && (
+                {(activeTab === 'buy-orders' || forcedTab === 'buy-orders' || !forcedTab) && (
                   <button
                     onClick={() => { setAuthRole('buyer'); setShowAuthModal(true); }}
-                    className={`${forcedTab === 'buy-orders' ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-white text-emerald-700 hover:bg-emerald-50'} px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-colors`}
+                    className={`${(forcedTab === 'buy-orders' || activeTab === 'buy-orders') ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-white text-emerald-700 hover:bg-emerald-50'} px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-colors`}
                   >
                     Login as Buyer
                   </button>
@@ -971,9 +971,9 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                   <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Seller</button>
                 </div>
               ) : mpUser.role !== 'seller' ? (
-                <div className="text-center py-16 bg-red-50 rounded-2xl">
-                  <p className="text-red-600 font-black uppercase text-[10px] tracking-widest">Seller Account Required</p>
-                  <p className="text-sm text-red-900 mt-2 font-bold">Only sellers can manage crop listings.</p>
+                <div className="text-center py-16">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Seller Account Required</p>
+                  <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Seller</button>
                 </div>
               ) : !mpUser.is_subscribed ? (
                 <div className="text-center py-16 bg-slate-100">
@@ -1096,9 +1096,9 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                   <button onClick={() => { setAuthRole('buyer'); setShowAuthModal(true); }} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Buyer</button>
                 </div>
               ) : mpUser.role !== 'buyer' ? (
-                <div className="text-center py-16 bg-red-50 rounded-2xl">
-                  <p className="text-red-600 font-black uppercase text-[10px] tracking-widest">Buyer Account Required</p>
-                  <p className="text-sm text-red-900 mt-2 font-bold">Only buyers can place crop orders.</p>
+                <div className="text-center py-16">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Buyer Account Required</p>
+                  <button onClick={() => { setAuthRole('buyer'); setShowAuthModal(true); }} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Buyer</button>
                 </div>
               ) : (
                 <>
@@ -1355,9 +1355,9 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                   <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Seller</button>
                 </div>
               ) : mpUser.role !== 'seller' ? (
-                <div className="text-center py-16 bg-amber-50 rounded-2xl">
-                  <p className="text-amber-600 font-black uppercase text-[10px] tracking-widest">Seller Account Required</p>
-                  <p className="text-sm text-amber-900 mt-2 font-bold">Only sellers can advertise their products in the market.</p>
+                <div className="text-center py-16">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Seller Account Required</p>
+                  <button onClick={() => { setAuthRole('seller'); setShowAuthModal(true); }} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest">Log in as Seller</button>
                 </div>
               ) : !mpUser.is_subscribed ? (
                 <div className="max-w-md mx-auto bg-slate-50 overflow-hidden">
