@@ -92,6 +92,7 @@ db.exec(`
     price_per_kg REAL NOT NULL,
     currency TEXT NOT NULL DEFAULT 'UGX',
     description TEXT,
+    category TEXT,
     status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'sold', 'cancelled')),
     is_promoted INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -122,7 +123,7 @@ db.exec(`
     agreed_price_per_kg REAL NOT NULL,
     total_value REAL NOT NULL,
     currency TEXT NOT NULL DEFAULT 'UGX',
-    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'completed', 'disputed')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'in-transit', 'completed', 'disputed')),
     payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK(payment_status IN ('unpaid', 'pending', 'paid')),
     payment_method TEXT,
     payment_phone TEXT,
@@ -225,6 +226,10 @@ try {
 
 try {
   db.exec('ALTER TABLE listings ADD COLUMN is_promoted INTEGER DEFAULT 0');
+} catch (e) { }
+
+try {
+  db.exec('ALTER TABLE listings ADD COLUMN category TEXT');
 } catch (e) { }
 
 export default db;

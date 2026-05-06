@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-interface MpUser {
+export interface MpUser {
   id: string;
   name: string;
   email: string;
   phone: string | null;
   district: string;
   role: 'seller' | 'buyer';
+  is_subscribed: boolean;
 }
 
 interface Listing {
@@ -23,6 +24,7 @@ interface Listing {
   currency: string;
   description: string | null;
   status: string;
+  is_promoted: number;
   created_at: string;
   seller_name: string;
   seller_district: string;
@@ -68,14 +70,16 @@ interface Trade {
 }
 
 // ─── Auth Modal ──────────────────────────────────────────────────────────────
-function AuthModal({
+export function AuthModal({
   onClose,
   onSuccess,
   defaultRole,
+  isInline = false,
 }: {
   onClose: () => void;
   onSuccess: (user: MpUser) => void;
   defaultRole: 'seller' | 'buyer';
+  isInline?: boolean;
 }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'seller' | 'buyer'>(defaultRole);
@@ -124,26 +128,30 @@ function AuthModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-md bg-slate-50 p-8"
-      >
-        <button
+    <div className={!isInline ? "fixed inset-0 z-[200] flex items-center justify-center p-4" : ""}>
+      {!isInline && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
           onClick={onClose}
-          className="absolute top-4 right-4 px-4 py-2 text-[10px] font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
-        >
-          Close
-        </button>
+        />
+      )}
+      <motion.div
+        initial={!isInline ? { opacity: 0, scale: 0.95, y: 20 } : {}}
+        animate={!isInline ? { opacity: 1, scale: 1, y: 0 } : {}}
+        exit={!isInline ? { opacity: 0, scale: 0.95, y: 20 } : {}}
+        className={`${!isInline ? 'relative w-full max-w-md bg-slate-50 p-8' : 'w-full bg-white'}`}
+      >
+        {!isInline && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 px-4 py-2 text-[10px] font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
+          >
+            Close
+          </button>
+        )}
 
         <div className="p-8">
           {/* Role selector */}
@@ -285,17 +293,47 @@ function AuthModal({
   );
 }
 
+export function InlineAuth({ onSuccess, defaultRole }: { onSuccess: (user: MpUser) => void; defaultRole: 'seller' | 'buyer' }) {
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-hidden max-w-lg mx-auto">
+      <AuthModal onClose={() => {}} onSuccess={onSuccess} defaultRole={defaultRole} isInline />
+    </div>
+  );
+}
+
 // ─── Add Listing Modal ───────────────────────────────────────────────────────
-function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+export function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [checkingSub, setCheckingSub] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [user, setUser] = useState<MpUser | null>(null);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     crop: '',
     quantity_kg: '',
     price_per_kg: '',
     currency: 'UGX',
-    description: ''
+    description: '',
+    category: 'Grains'
   });
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('/api/marketplace/auth/session');
+        const data = await res.json();
+        if (data.user) {
+          setUser(data.user);
+          if (data.user.is_subscribed) {
+            setIsSubscribed(true);
+          }
+        }
+      } catch (e) {} finally {
+        setCheckingSub(false);
+      }
+    };
+    checkStatus();
+  }, []);
 
   const currencies = ['UGX', 'KES', 'RWF', 'TZS', 'NGN', 'GHS', 'ZAR', 'USD'];
 
@@ -303,6 +341,7 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
       const res = await fetch('/api/marketplace/listings', {
         method: 'POST',
@@ -313,6 +352,7 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           price_per_kg: parseFloat(form.price_per_kg),
           currency: form.currency,
           description: form.description,
+          category: form.category
         }),
       });
       const data = await res.json();
@@ -325,6 +365,60 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
       setLoading(false);
     }
   };
+
+  if (checkingSub) {
+    return (
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+        <div className="relative bg-white p-8 rounded-2xl shadow-xl">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse">Verifying Account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthModal 
+        onClose={onClose} 
+        onSuccess={(u) => { setUser(u); if (u.is_subscribed) setIsSubscribed(true); }} 
+        defaultRole="seller" 
+      />
+    );
+  }
+
+  if (!isSubscribed) {
+    return (
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-sm bg-white p-10 text-center rounded-[3rem] shadow-2xl overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-amber-500" />
+          <div className="w-20 h-20 bg-amber-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-4xl">⚠️</div>
+          <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">Subscription Required</h3>
+          <p className="text-sm font-bold text-slate-500 mb-8 leading-relaxed">
+            To list your crops on the marketplace, you must first activate your seller account with a one-time fee of 100,000 UGX.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                onClose();
+                // This is a hack since we can't easily trigger a parent state change here, 
+                // but usually the parent will handle the advertising tab navigation.
+                window.location.hash = 'advertising'; // or similar signal
+              }}
+              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-all"
+            >
+              Go to Advertising Hub
+            </button>
+            <button onClick={onClose} className="w-full text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Maybe Later</button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
@@ -376,6 +470,18 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             </div>
           </div>
           <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Category</label>
+            <select
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+              className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold appearance-none"
+            >
+              {['Grains', 'Vegetables', 'Fruits', 'Herbs', 'Inputs', 'Livestock'].map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Description (optional)</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               className="w-full bg-slate-50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none font-medium"
@@ -393,26 +499,43 @@ function AddListingModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 }
 
 // ─── Add Buy Order Modal ─────────────────────────────────────────────────────
-function AddBuyOrderModal({
+export function AddBuyOrderModal({
   onClose,
   onSuccess,
   prefillCrop,
   prefillCurrency = 'UGX',
+  initialUser = undefined,
 }: {
   onClose: () => void;
   onSuccess: (trade: Trade | null) => void;
   prefillCrop?: string;
   prefillCurrency?: string;
+  initialUser?: MpUser | null;
 }) {
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(initialUser === undefined);
+  const [user, setUser] = useState<MpUser | null>(initialUser || null);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     crop: prefillCrop || '',
     quantity_kg: '',
     max_price_per_kg: '',
-    currency: prefillCurrency,
-    description: ''
+    currency: prefillCurrency || 'UGX',
+    description: '',
   });
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/marketplace/auth/session');
+        const data = await res.json();
+        if (data.user) setUser(data.user);
+      } catch (e) {} finally {
+        setCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const currencies = ['UGX', 'KES', 'RWF', 'TZS', 'NGN', 'GHS', 'ZAR', 'USD'];
 
@@ -442,6 +565,27 @@ function AddBuyOrderModal({
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+        <div className="relative bg-white p-8 rounded-2xl shadow-xl">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse">Verifying Account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthModal 
+        onClose={onClose} 
+        onSuccess={(u) => setUser(u)} 
+        defaultRole="buyer" 
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
@@ -756,6 +900,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
             onClose={() => setShowAddBuyOrder(false)}
             prefillCrop={prefillCrop}
             prefillCurrency={prefillCurrency}
+            initialUser={mpUser}
             onSuccess={(trade) => {
               fetchAll();
               if (trade) setTradeToast(trade);
@@ -1226,7 +1371,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {listings.map(listing => (
+                        {listings.map((listing: Listing) => (
                           <div key={listing.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-blue-200 transition-all group">
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 font-black text-xs shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
@@ -1472,7 +1617,7 @@ export default function Marketplace({ forcedTab }: { forcedTab?: string }) {
                       <p className="text-slate-400 text-xs mb-6 max-w-md">Select one of your existing listings to feature it at the top of the browse section for all buyers.</p>
                       {myListings.length > 0 ? (
                         <div className="space-y-2">
-                          {myListings.map(listing => (
+                          {myListings.map((listing: Listing) => (
                             <div key={listing.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
                               <span className="font-bold text-sm uppercase tracking-tight">
                                 {listing.crop} ({listing.quantity_kg}kg)

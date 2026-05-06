@@ -6,7 +6,7 @@ import Link from 'next/link';
 import ChatInterface from '@/components/ChatInterface';
 import WeatherWidget from '@/components/WeatherWidget';
 import MarketPrices from '@/components/MarketPrices';
-import Marketplace from '@/components/Marketplace';
+import Marketplace, { InlineAuth } from '@/components/Marketplace';
 import AuthModal from '@/components/AuthModal';
 import IoTDashboard from '@/components/IoTDashboard';
 import CropRecommendation from '@/components/CropRecommendation';
@@ -14,6 +14,9 @@ import SmartCropCalendar from '@/components/SmartCropCalendar';
 import ResourceLibrary from '@/components/ResourceLibrary';
 import NotificationBell from '@/components/NotificationBell';
 import AboutPage from '@/components/AboutPage';
+import OrdersDashboard from '@/components/OrdersDashboard';
+import MarketplaceBrowse from '@/components/MarketplaceBrowse';
+import SellerPortal from '@/components/SellerPortal';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -27,6 +30,8 @@ export default function Page() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [marketplaceUser, setMarketplaceUser] = useState<any>(null);
+  const [checkingMarketplace, setCheckingMarketplace] = useState(true);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [activeView, setActiveView] = useState<string>('about');
   const [location, setLocation] = useState<LocationState | null>(null);
@@ -37,9 +42,22 @@ export default function Page() {
     crops: true
   });
 
+  useEffect(() => {
+    const fetchMarketplaceSession = async () => {
+      try {
+        const res = await fetch('/api/marketplace/auth/session');
+        const data = await res.json();
+        setMarketplaceUser(data.user || null);
+      } catch (e) {} finally {
+        setCheckingMarketplace(false);
+      }
+    };
+    fetchMarketplaceSession();
+  }, [user]);
+
   // Access control: Redirect to 'about' if on a restricted view while not logged in
   useEffect(() => {
-    const restrictedViews = ['recommendation', 'calendar', 'orders', 'listings', 'advertising', 'iot'];
+    const restrictedViews = ['recommendation', 'calendar', 'iot'];
     if (!user && restrictedViews.includes(activeView)) {
       setActiveView('about');
     }
@@ -165,7 +183,7 @@ export default function Page() {
               </button>
               {expandedMenus.crops && (
                 <div className="space-y-1 pl-4">
-                  <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
+                  <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Marketplace</div>
                   <button
                     onClick={() => switchView('orders')}
                     className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
@@ -178,11 +196,9 @@ export default function Page() {
                   >
                     Listings
                   </button>
-
-                  <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
                   <button
                     onClick={() => switchView('advertising')}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-amber-400 bg-amber-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                   >
                     Advertising
                   </button>
@@ -367,34 +383,74 @@ export default function Page() {
               </div>
             )}
 
-            {activeView === 'orders' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Buy Orders</h2>
-                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Request crops from local farmers</p>
-                </div>
-                <Marketplace forcedTab="buy-orders" />
-              </div>
-            )}
+             {activeView === 'orders' && (
+               <div className="space-y-8">
+                 {marketplaceUser ? (
+                    <MarketplaceBrowse onPostListing={() => switchView('listings')} />
+                 ) : checkingMarketplace ? (
+                    <div className="py-20 text-center animate-pulse text-slate-400 font-black uppercase text-[10px] tracking-widest">Verifying Marketplace Access...</div>
+                 ) : (
+                    <div className="space-y-8 max-w-2xl mx-auto text-center">
+                      <div className="space-y-2 mb-8">
+                        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Marketplace Entry</h2>
+                        <p className="text-slate-500 font-medium">Join our community of buyers to access fresh agricultural output.</p>
+                      </div>
+                      <InlineAuth onSuccess={(u) => setMarketplaceUser(u)} defaultRole="buyer" />
+                    </div>
+                 )}
+               </div>
+             )}
 
-            {activeView === 'listings' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">My Listings</h2>
-                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Manage your available crop products</p>
-                </div>
-                <Marketplace forcedTab="my-listings" />
-              </div>
-            )}
+             {activeView === 'listings' && (
+               <div className="space-y-8">
+                 {marketplaceUser ? (
+                    <SellerPortal />
+                 ) : checkingMarketplace ? (
+                    <div className="py-20 text-center animate-pulse text-slate-400 font-black uppercase text-[10px] tracking-widest">Verifying Marketplace Access...</div>
+                 ) : (
+                    <div className="space-y-8 max-w-2xl mx-auto text-center">
+                      <div className="space-y-2 mb-8">
+                        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Seller Hub</h2>
+                        <p className="text-slate-500 font-medium">Manage your farm inventory and connect with bulk buyers.</p>
+                      </div>
+                      <InlineAuth onSuccess={(u) => setMarketplaceUser(u)} defaultRole="seller" />
+                    </div>
+                 )}
+               </div>
+             )}
 
+             {activeView === 'advertising' && (
+               <div className="space-y-8">
+                 {marketplaceUser ? (
+                    <Marketplace forcedTab="advertising" />
+                 ) : checkingMarketplace ? (
+                    <div className="py-20 text-center animate-pulse text-slate-400 font-black uppercase text-[10px] tracking-widest">Verifying Marketplace Access...</div>
+                 ) : (
+                    <div className="space-y-8 max-w-2xl mx-auto text-center">
+                      <div className="space-y-2 mb-8">
+                        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Advertising Hub</h2>
+                        <p className="text-slate-500 font-medium">Sign in as a Seller to promote your products and track market performance.</p>
+                      </div>
+                      <InlineAuth onSuccess={(u) => setMarketplaceUser(u)} defaultRole="seller" />
+                    </div>
+                 )}
+               </div>
+             )}
 
-            {activeView === 'advertising' && (
+            {activeView === 'dashboard' && (
               <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase tracking-tighter">Market Advertising</h2>
-                  <p className="text-slate-500 text-lg uppercase tracking-widest text-xs font-bold">Promote your products to a wider audience</p>
-                </div>
-                <Marketplace forcedTab="advertising" />
+                {user ? (
+                   <OrdersDashboard />
+                ) : (
+                  <div className="bg-white rounded-[3rem] p-20 text-center border border-slate-100 shadow-xl space-y-8 max-w-2xl mx-auto">
+                    <div className="w-24 h-24 bg-orange-50 rounded-[2rem] flex items-center justify-center mx-auto text-4xl">📊</div>
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Dashboard Access</h2>
+                      <p className="text-slate-500 font-medium">Sign in to track your trade history and marketplace statistics.</p>
+                    </div>
+                    <button onClick={() => openAuthModal('login')} className="bg-orange-600 text-white px-10 py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-orange-700 transition-all">Sign In to View</button>
+                  </div>
+                )}
               </div>
             )}
 

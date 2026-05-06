@@ -25,24 +25,37 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const crop = searchParams.get('crop');
+    const category = searchParams.get('category');
     const sellerId = searchParams.get('seller_id');
 
     let query = `
       SELECT l.*, mu.name as seller_name, mu.district as seller_district, mu.phone as seller_phone
       FROM listings l
       JOIN marketplace_users mu ON l.seller_id = mu.id
-      WHERE l.status = 'active' AND mu.is_subscribed = 1
+      WHERE l.status = 'active'
     `;
     const params: any[] = [];
+
+    if (!sellerId) {
+      query += ' AND mu.is_subscribed = 1';
+    } else {
+      query += ' AND l.seller_id = ?';
+      params.push(sellerId);
+    }
 
     if (crop) {
       query += ' AND LOWER(l.crop) LIKE ?';
       params.push(`%${crop.toLowerCase()}%`);
     }
-    if (sellerId) {
-      query += ' AND l.seller_id = ?';
-      params.push(sellerId);
+    if (category && category !== 'All') {
+      query += ' AND LOWER(l.category) = LOWER(?)';
+      params.push(category);
     }
+
+    // Capture total count with same filters
+    const countQuery = query.replace('l.*, mu.name as seller_name, mu.district as seller_district, mu.phone as seller_phone', 'COUNT(*) as count');
+    const totalCount = db.prepare(countQuery).get(...params) as any;
+
     query += ' ORDER BY l.is_promoted DESC, l.created_at DESC';
 
     const listings = db.prepare(query).all(...params) as any[];
@@ -57,7 +70,10 @@ export async function GET(req: Request) {
       insertMany(uniqueSellers);
     }
 
-    return NextResponse.json({ listings });
+    return NextResponse.json({ 
+      listings,
+      totalCount: totalCount.count
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 });
   }
@@ -74,7 +90,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Subscription required. Please pay the activation fee in the Advertising portal.' }, { status: 403 });
     }
 
-    const { crop, quantity_kg, price_per_kg, currency, description } = await req.json();
+    const { crop, quantity_kg, price_per_kg, currency, description, category } = await req.json();
     if (!crop || !quantity_kg || !price_per_kg) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -84,8 +100,8 @@ export async function POST(req: Request) {
 
     const id = crypto.randomUUID();
     db.prepare(
-      'INSERT INTO listings (id, seller_id, crop, quantity_kg, price_per_kg, currency, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(id, seller.id, crop.trim(), quantity_kg, price_per_kg, currency || 'UGX', description || null);
+      'INSERT INTO listings (id, seller_id, crop, quantity_kg, price_per_kg, currency, description, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, seller.id, crop.trim(), quantity_kg, price_per_kg, currency || 'UGX', description || null, category || 'Grains');
 
     // === REVERSE MATCHING ENGINE (PARTIAL FULFILLMENT) ===
     const openOrders = db.prepare(`
