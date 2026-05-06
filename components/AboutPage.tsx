@@ -9,8 +9,13 @@ import {
   ShoppingCart, 
   CloudSun, 
   Megaphone,
-  ArrowRight
+  ArrowRight,
+  Mail,
+  Phone,
+  MapPin,
+  X
 } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
 
 interface AboutPageProps {
   onGetStarted?: () => void;
@@ -50,6 +55,8 @@ const FEATURES = [
 ];
 
 export default function AboutPage({ onGetStarted }: AboutPageProps) {
+  const [showContacts, setShowContacts] = React.useState(false);
+
   return (
     <div className="space-y-12 pb-20">
       {/* Badge */}
@@ -79,10 +86,48 @@ export default function AboutPage({ onGetStarted }: AboutPageProps) {
             >
               Get Started Free
             </button>
-            <button className="px-8 py-4 bg-white text-emerald-800 border-2 border-emerald-100 rounded-2xl text-sm font-black hover:bg-emerald-50 transition-all w-full sm:w-auto">
-              Learn More
+            <button 
+              onClick={() => setShowContacts(!showContacts)}
+              className={`px-8 py-4 rounded-2xl text-sm font-black transition-all w-full sm:w-auto ${showContacts ? 'bg-slate-900 text-white' : 'bg-white text-emerald-800 border-2 border-emerald-100 hover:bg-emerald-50'}`}
+            >
+              {showContacts ? 'Hide Contacts' : 'Learn More'}
             </button>
           </div>
+
+          <AnimatePresence>
+            {showContacts && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -20 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -20 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white rounded-[32px] p-8 border border-emerald-100 shadow-2xl shadow-emerald-900/5 grid grid-cols-1 sm:grid-cols-3 gap-8 mt-4">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-3 bg-emerald-50 rounded-full text-emerald-600">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Us</p>
+                    <p className="text-sm font-black text-slate-900">admin@agrisystem.ug</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-3 bg-emerald-50 rounded-full text-emerald-600">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Call Us</p>
+                    <p className="text-sm font-black text-slate-900">+256 700 000 000</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-3 bg-emerald-50 rounded-full text-emerald-600">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visit Us</p>
+                    <p className="text-sm font-black text-slate-900 text-center">Plot 12, Innovation Way<br/>Kampala, Uganda</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
