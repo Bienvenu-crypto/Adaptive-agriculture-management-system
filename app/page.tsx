@@ -37,6 +37,14 @@ export default function Page() {
     crops: true
   });
 
+  // Access control: Redirect to 'about' if on a restricted view while not logged in
+  useEffect(() => {
+    const restrictedViews = ['recommendation', 'calendar', 'orders', 'listings', 'advertising', 'iot'];
+    if (!user && restrictedViews.includes(activeView)) {
+      setActiveView('about');
+    }
+  }, [user, activeView]);
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -125,57 +133,63 @@ export default function Page() {
                 >
                   Chatbot
                 </button>
-                <button
-                  onClick={() => switchView('recommendation')}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'recommendation' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  Crop Recommendation
-                </button>
-                <button
-                  onClick={() => switchView('calendar')}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'calendar' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  Smart Crop Calendar
-                </button>
+                {user && (
+                  <>
+                    <button
+                      onClick={() => switchView('recommendation')}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'recommendation' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Crop Recommendation
+                    </button>
+                    <button
+                      onClick={() => switchView('calendar')}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold transition-all ${activeView === 'calendar' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                      Smart Crop Calendar
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
 
           {/* Crops Menu */}
-          <div className="space-y-1">
-            <button
-              onClick={() => toggleMenu('crops')}
-              className="w-full text-left px-6 py-2 text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between hover:text-slate-300"
-            >
-              Crops
-              <span>{expandedMenus.crops ? '−' : '+'}</span>
-            </button>
-            {expandedMenus.crops && (
-              <div className="space-y-1 pl-4">
-                <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
-                <button
-                  onClick={() => switchView('orders')}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  Orders
-                </button>
-                <button
-                  onClick={() => switchView('listings')}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'listings' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  Listings
-                </button>
+          {user && (
+            <div className="space-y-1">
+              <button
+                onClick={() => toggleMenu('crops')}
+                className="w-full text-left px-6 py-2 text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between hover:text-slate-300"
+              >
+                Crops
+                <span>{expandedMenus.crops ? '−' : '+'}</span>
+              </button>
+              {expandedMenus.crops && (
+                <div className="space-y-1 pl-4">
+                  <div className="px-4 py-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Products</div>
+                  <button
+                    onClick={() => switchView('orders')}
+                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'orders' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                  >
+                    Orders
+                  </button>
+                  <button
+                    onClick={() => switchView('listings')}
+                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'listings' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                  >
+                    Listings
+                  </button>
 
-                <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
-                <button
-                  onClick={() => switchView('advertising')}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  Advertising
-                </button>
-              </div>
-            )}
-          </div>
+                  <div className="px-4 py-2 mt-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Market</div>
+                  <button
+                    onClick={() => switchView('advertising')}
+                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activeView === 'advertising' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                  >
+                    Advertising
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             onClick={() => switchView('weather')}
@@ -284,13 +298,17 @@ export default function Page() {
                 <button onClick={() => switchView('about')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black ${activeView === 'about' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>About</button>
                 <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Advisory</div>
                 <button onClick={() => switchView('chatbot')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'chatbot' ? 'text-emerald-600' : ''}`}>Chatbot</button>
-                <button onClick={() => switchView('recommendation')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'recommendation' ? 'text-emerald-600' : ''}`}>Recommendation</button>
-                <button onClick={() => switchView('calendar')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'calendar' ? 'text-emerald-600' : ''}`}>Calendar</button>
+                {user && (
+                  <>
+                    <button onClick={() => switchView('recommendation')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'recommendation' ? 'text-emerald-600' : ''}`}>Recommendation</button>
+                    <button onClick={() => switchView('calendar')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'calendar' ? 'text-emerald-600' : ''}`}>Calendar</button>
 
-                <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crops</div>
-                <button onClick={() => switchView('orders')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'orders' ? 'text-emerald-600' : ''}`}>Orders</button>
-                <button onClick={() => switchView('listings')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'listings' ? 'text-emerald-600' : ''}`}>Listings</button>
-                <button onClick={() => switchView('advertising')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'advertising' ? 'text-emerald-600' : ''}`}>Advertising</button>
+                    <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Crops</div>
+                    <button onClick={() => switchView('orders')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'orders' ? 'text-emerald-600' : ''}`}>Orders</button>
+                    <button onClick={() => switchView('listings')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'listings' ? 'text-emerald-600' : ''}`}>Listings</button>
+                    <button onClick={() => switchView('advertising')} className={`w-full text-left px-8 py-2.5 rounded-xl text-sm font-bold ${activeView === 'advertising' ? 'text-emerald-600' : ''}`}>Advertising</button>
+                  </>
+                )}
 
                 <button onClick={() => switchView('weather')} className={`w-full text-left px-5 py-3 rounded-xl text-sm font-black mt-2 ${activeView === 'weather' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>Weather</button>
 
@@ -317,7 +335,7 @@ export default function Page() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {activeView === 'about' && <AboutPage />}
+            {activeView === 'about' && <AboutPage onGetStarted={() => user ? switchView('chatbot') : openAuthModal('signup')} />}
 
             {activeView === 'chatbot' && (
               <div className="space-y-8">

@@ -2,109 +2,120 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
+import { 
+  Bot, 
+  Calendar, 
+  Sprout, 
+  ShoppingCart, 
+  CloudSun, 
+  Megaphone,
+  ArrowRight
+} from 'lucide-react';
+
+interface AboutPageProps {
+  onGetStarted?: () => void;
+}
 
 const FEATURES = [
   {
-    title: 'AI Advisory',
-    description: 'Expert agricultural guidance powered by advanced AI models.',
-    rating: 4.9
+    icon: <Bot className="w-8 h-8 text-slate-500" />,
+    title: 'AI Chatbot',
+    description: 'Get instant answers to your farming questions from our intelligent agricultural assistant available 24/7.'
   },
   {
-    title: 'Smart Calendar',
-    description: 'Optimize your planting and harvesting cycles with precision.',
-    rating: 4.8
+    icon: <Calendar className="w-8 h-8 text-red-500" />,
+    title: 'Smart Crop Calendar',
+    description: 'Plan your planting and harvest schedule with AI-powered recommendations based on local conditions.'
   },
   {
-    title: 'Market Intelligence',
-    description: 'Real-time price tracking and commodity exchange.',
-    rating: 4.7
+    icon: <Sprout className="w-8 h-8 text-emerald-500" />,
+    title: 'Crop Recommendations',
+    description: 'Receive personalized crop suggestions based on soil type, climate, and regional market demand.'
   },
   {
-    title: 'Climate Dynamics',
-    description: 'Hyper-local weather forecasting for strategic farming.',
-    rating: 4.9
+    icon: <ShoppingCart className="w-8 h-8 text-blue-500" />,
+    title: 'Marketplace Listings',
+    description: 'Buy and sell agricultural products directly with other farmers and buyers on our secure platform.'
+  },
+  {
+    icon: <CloudSun className="w-8 h-8 text-slate-700" />,
+    title: 'Weather Monitoring',
+    description: 'Real-time weather data and 7-day forecasts tailored to your farm\'s specific geographic location.'
+  },
+  {
+    icon: <Megaphone className="w-8 h-8 text-orange-500" />,
+    title: 'Advertising Tools',
+    description: 'Promote your farm products and services to a targeted audience of farmers and agribusinesses.'
   }
 ];
 
-export default function AboutPage() {
-  const [stats, setStats] = React.useState({ participants: 0, trades: 0, accuracy: '95.0', listings: 0 });
-
-  React.useEffect(() => {
-    fetch('/api/stats')
-      .then(res => res.json())
-      .then(data => {
-        if (data.participants !== undefined) setStats(data);
-      })
-      .catch(() => { });
-  }, []);
-
+export default function AboutPage({ onGetStarted }: AboutPageProps) {
   return (
-    <div className="space-y-16">
-      <section>
-        <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-6">
-          Empowering Farmers with <span className="text-emerald-600">Intelligence</span>
-        </h2>
-        <p className="text-slate-500 text-lg max-w-3xl leading-relaxed">
-          The Agriculture Management System (AMS) is a state-of-the-art platform designed to modernize 
-          farming practices through data-driven insights, AI-powered advisory, and secure market access.
-        </p>
-      </section>
+    <div className="space-y-12 pb-20">
+      {/* Badge */}
+      <div className="flex">
+        <span className="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-widest">
+          About
+        </span>
+      </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-        {FEATURES.map((feature, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="group"
-          >
-            <h3 className="text-xl font-black text-slate-900 mb-3 uppercase tracking-tighter">{feature.title}</h3>
-            <p className="text-slate-500 text-sm mb-6 leading-relaxed max-w-sm">{feature.description}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Efficiency Rating:</span>
-              <span className="text-sm font-black text-emerald-600">{feature.rating}/5.0</span>
-            </div>
-          </motion.div>
-        ))}
-      </section>
-
-      <section className="bg-slate-900 p-12 text-white relative overflow-hidden">
-        <div className="relative z-10">
-          <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-12">Performance Metrics</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
-            <div>
-              <div className="text-5xl font-black mb-2 tracking-tighter">{stats.trades > 10 ? `#${Math.floor(stats.trades / 100) + 1}` : '#1'}</div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Regional Market Leader</p>
-            </div>
-            <div>
-              <div className="text-5xl font-black mb-2 tracking-tighter">{stats.accuracy}%</div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Predictive Accuracy</p>
-            </div>
-            <div>
-              <div className="text-5xl font-black mb-2 tracking-tighter">{stats.participants.toLocaleString()}</div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Verified Participants</p>
-            </div>
+      {/* Hero Section */}
+      <section className="bg-emerald-50/50 rounded-[40px] p-12 text-center border border-emerald-100/50">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <h3 className="text-[11px] font-black text-emerald-700 uppercase tracking-[0.4em]">
+            Agriculture Management System
+          </h3>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tight leading-[1.1]">
+            Empowering Farmers with <br />
+            <span className="text-emerald-600">Smart Technology</span>
+          </h2>
+          <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto font-medium">
+            A comprehensive digital platform connecting farmers, buyers, and experts through AI-powered tools, real-time weather, smart crop calendars, and an intelligent marketplace.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <button 
+              onClick={onGetStarted}
+              className="px-8 py-4 bg-emerald-800 text-white rounded-2xl text-sm font-black hover:bg-emerald-900 transition-all shadow-xl shadow-emerald-800/20 w-full sm:w-auto"
+            >
+              Get Started Free
+            </button>
+            <button className="px-8 py-4 bg-white text-emerald-800 border-2 border-emerald-100 rounded-2xl text-sm font-black hover:bg-emerald-50 transition-all w-full sm:w-auto">
+              Learn More
+            </button>
           </div>
         </div>
       </section>
 
-      <section className="py-12">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-12">
-          <div>
-            <h3 className="text-2xl font-black text-slate-900 mb-3 uppercase tracking-tighter">Operational Support</h3>
-            <p className="text-slate-500 text-sm font-black uppercase tracking-[0.2em]">Strategic Communication Channels</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-12">
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Voice Comms</p>
-              <p className="text-lg font-black text-slate-900 tracking-tighter">+256 700 000 000</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Digital Inquiry</p>
-              <p className="text-lg font-black text-slate-900 tracking-tighter">admin@agrisystem.ug</p>
-            </div>
-          </div>
+      {/* Features Section */}
+      <section className="space-y-10">
+        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Our Key Features</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {FEATURES.map((feature, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-white p-8 rounded-[32px] border border-slate-100 hover:border-emerald-200 transition-all group shadow-sm hover:shadow-xl hover:shadow-emerald-500/5"
+            >
+              <div className="mb-6 p-4 rounded-2xl bg-slate-50 w-fit group-hover:scale-110 transition-transform duration-500">
+                {feature.icon}
+              </div>
+              <h4 className="text-lg font-black text-slate-900 mb-3 tracking-tight">{feature.title}</h4>
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">{feature.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Mission Section */}
+      <section className="bg-emerald-50/50 rounded-[32px] p-12 text-center border border-emerald-100/50">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <h3 className="text-emerald-700 font-black text-lg tracking-tight">Our Mission</h3>
+          <p className="text-slate-600 text-sm leading-relaxed font-semibold">
+            To transform African agriculture by providing farmers with digital tools that improve productivity, reduce waste, and connect them to fair markets — making smart farming accessible to all.
+          </p>
         </div>
       </section>
     </div>
